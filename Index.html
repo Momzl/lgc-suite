@@ -1,0 +1,2830 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#c9c4bc">
+<title>LGC Suite v2.0 — Conciergerie Clé-en-Main</title>
+<style>
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    :root {
+        --bg: #131313; --panel: #1c1c1c; --panel-2: #232323; --panel-3: #2a2a2a;
+        --border: #2e2e2e; --border-hi: #3d3d3d; --border-metal: #5a554e;
+        --ink: #e8e4dd; --ink-dim: #8a857e; --ink-faint: #5a554e;
+        --metal: #c9c4bc; --metal-hi: #e8e4dd; --metal-lo: #8a857e;
+        --success: #6abf7b; --error: #d9534f; --warn: #d4a017; --info: #7a9ec9;
+        --airbnb: #ff5a5f; --booking: #003580; --expedia: #fdc70d; --vrbo: #0a2d5e;
+        --radius: 14px; --radius-sm: 8px;
+        --shadow: 0 8px 30px rgba(0,0,0,0.4);
+        --shadow-lg: 0 20px 60px rgba(0,0,0,0.6);
+    }
+    html { scroll-behavior: smooth; }
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+        background: radial-gradient(ellipse at top, #1f1f1f 0%, #131313 55%);
+        background-attachment: fixed;
+        color: var(--ink); font-size: 15px; line-height: 1.5;
+        min-height: 100vh;
+    }
+    .container { max-width: 1280px; margin: 0 auto; padding: 0 1.2rem; }
+    .container-narrow { max-width: 820px; margin: 0 auto; padding: 0 1.2rem; }
+
+    /* ── LOGIN ── */
+    .login-screen {
+        position: fixed; inset: 0; z-index: 300;
+        background: radial-gradient(ellipse at top, #1f1f1f, #0a0a0a);
+        display: flex; align-items: center; justify-content: center;
+        padding: 1rem;
+    }
+    .login-screen.hidden { display: none; }
+    .login-card {
+        max-width: 420px; width: 100%;
+        background: linear-gradient(180deg, #1f1f1f, #171717);
+        border: 1px solid var(--metal-lo);
+        border-radius: var(--radius); padding: 2.2rem 1.8rem;
+        box-shadow: var(--shadow-lg);
+        text-align: center;
+        position: relative; overflow: hidden;
+    }
+    .login-card::before {
+        content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+        background: linear-gradient(90deg, transparent, var(--metal-hi), transparent);
+    }
+    .login-card svg { width: 72px; height: 72px; margin-bottom: 0.6rem; }
+    .login-card h1 {
+        font-size: 1.6rem; letter-spacing: 0.35em; text-indent: 0.35em;
+        color: var(--metal-hi); margin-bottom: 0.3rem; font-weight: 700;
+        text-shadow: 0 1px 0 rgba(255,255,255,0.08), 0 -1px 0 rgba(0,0,0,0.6);
+    }
+    .login-card .lc-sub {
+        font-size: 0.65rem; color: var(--ink-dim);
+        letter-spacing: 0.25em; text-transform: uppercase;
+        margin-bottom: 1.5rem; font-weight: 500;
+    }
+    .login-card .lc-version {
+        display: inline-block; margin-top: 1rem;
+        font-size: 0.6rem; color: var(--ink-faint);
+        padding: 0.2rem 0.6rem; border-radius: 10px;
+        border: 1px solid var(--border);
+        letter-spacing: 0.1em;
+    }
+    .login-card input { margin-bottom: 0.7rem; text-align: left; }
+    .login-card .divider {
+        display: flex; align-items: center; gap: 0.6rem;
+        margin: 1rem 0; color: var(--ink-faint);
+        font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.1em;
+    }
+    .login-card .divider::before, .login-card .divider::after {
+        content: ''; flex: 1; height: 1px; background: var(--border);
+    }
+    .login-card .oauth-btn {
+        width: 100%; padding: 0.75rem; border-radius: 10px;
+        background: transparent; border: 1px solid var(--border-hi);
+        color: var(--ink); font-family: inherit; font-size: 0.82rem;
+        cursor: pointer; display: flex; align-items: center; gap: 0.6rem;
+        justify-content: center; margin-bottom: 0.5rem;
+        transition: all 0.2s;
+    }
+    .login-card .oauth-btn:hover { border-color: var(--metal); background: var(--panel-2); }
+    .login-card .demo-hint {
+        font-size: 0.65rem; color: var(--ink-faint);
+        margin-top: 1rem; font-style: italic; line-height: 1.5;
+    }
+
+    /* ── TOPBAR ── */
+    .topbar {
+        position: sticky; top: 0; z-index: 100;
+        background: rgba(19,19,19,0.94);
+        backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+        border-bottom: 1px solid var(--border);
+    }
+    .topbar-inner {
+        max-width: 1280px; margin: 0 auto; padding: 0.7rem 1.2rem;
+        display: flex; align-items: center; gap: 1rem;
+    }
+    .topbar-brand { display: flex; align-items: center; gap: 0.6rem; flex-shrink: 0; cursor: pointer; }
+    .topbar-brand svg { width: 34px; height: 34px; }
+    .topbar-brand .brand-text {
+        font-size: 0.92rem; font-weight: 800; letter-spacing: 0.25em;
+        color: var(--metal-hi);
+        text-shadow: 0 1px 0 rgba(255,255,255,0.05);
+    }
+    .topbar-brand .brand-sub {
+        font-size: 0.55rem; letter-spacing: 0.22em;
+        color: var(--ink-faint); text-transform: uppercase;
+    }
+    .topbar-tabs {
+        flex: 1; display: flex; gap: 0.2rem;
+        overflow-x: auto; scrollbar-width: none;
+        padding: 0 0.5rem;
+    }
+    .topbar-tabs::-webkit-scrollbar { display: none; }
+    .topbar-tab {
+        padding: 0.55rem 0.9rem; border-radius: 8px;
+        background: transparent; border: none;
+        color: var(--ink-dim); font-family: inherit;
+        font-size: 0.76rem; font-weight: 600; cursor: pointer;
+        white-space: nowrap; transition: all 0.15s;
+        display: flex; align-items: center; gap: 0.35rem;
+    }
+    .topbar-tab:hover { background: var(--panel-2); color: var(--ink); }
+    .topbar-tab.active {
+        background: linear-gradient(180deg, var(--metal-hi), var(--metal-lo));
+        color: #131313;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.35);
+    }
+    .topbar-tab .tab-badge {
+        padding: 0.05rem 0.4rem; border-radius: 8px;
+        background: var(--error); color: #fff;
+        font-size: 0.55rem; font-weight: 700;
+        min-width: 16px; text-align: center;
+    }
+    .topbar-user {
+        display: flex; align-items: center; gap: 0.5rem;
+        padding: 0.35rem 0.75rem 0.35rem 0.35rem;
+        background: var(--panel); border: 1px solid var(--border-hi);
+        border-radius: 20px; cursor: pointer; flex-shrink: 0;
+        transition: border-color 0.2s;
+    }
+    .topbar-user:hover { border-color: var(--metal-lo); }
+    .topbar-user .avatar {
+        width: 28px; height: 28px; border-radius: 50%;
+        background: linear-gradient(180deg, var(--metal-hi), var(--metal-lo));
+        display: flex; align-items: center; justify-content: center;
+        font-size: 0.7rem; font-weight: 700; color: #131313;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.35);
+    }
+    .topbar-user .u-name { font-size: 0.72rem; font-weight: 600; color: var(--ink); }
+    .topbar-user .u-role { font-size: 0.6rem; color: var(--ink-dim); }
+    @media (max-width: 900px) {
+        .topbar-user .u-name, .topbar-user .u-role { display: none; }
+        .topbar-user { padding: 0.3rem; }
+    }
+
+    /* ── VIEWS ── */
+    .view { display: none; padding-bottom: 90px; min-height: calc(100vh - 60px); }
+    .view.active { display: block; animation: viewFade 0.25s ease; }
+    @keyframes viewFade { from { opacity: 0.6; } to { opacity: 1; } }
+
+    /* ── COMMON UI ── */
+    .btn {
+        padding: 0.7rem 1.2rem; border-radius: 10px;
+        font-weight: 700; font-size: 0.78rem;
+        cursor: pointer; font-family: inherit;
+        display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem;
+        border: none; transition: transform 0.1s, filter 0.2s, border-color 0.2s;
+        letter-spacing: 0.03em; text-decoration: none;
+        white-space: nowrap;
+    }
+    .btn:active { transform: scale(0.97); }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn-metal {
+        background: linear-gradient(180deg, var(--metal-hi), var(--metal) 50%, var(--metal-lo));
+        color: #131313;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.4), 0 4px 16px rgba(0,0,0,0.3);
+    }
+    .btn-metal:hover { filter: brightness(1.05); }
+    .btn-ghost { background: transparent; color: var(--ink); border: 1px solid var(--border-hi); }
+    .btn-ghost:hover { border-color: var(--metal); background: var(--panel-2); }
+    .btn-danger { background: rgba(217,83,79,0.12); color: var(--error); border: 1px solid var(--error); }
+    .btn-danger:hover { background: rgba(217,83,79,0.2); }
+    .btn-success { background: rgba(106,191,123,0.12); color: var(--success); border: 1px solid var(--success); }
+    .btn-sm { padding: 0.42rem 0.85rem; font-size: 0.7rem; border-radius: 8px; }
+    .btn-xs { padding: 0.28rem 0.55rem; font-size: 0.62rem; border-radius: 6px; }
+
+    .panel {
+        background: linear-gradient(180deg, #1f1f1f 0%, #1a1a1a 100%);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 1.2rem 1.3rem;
+        margin-bottom: 1rem;
+        position: relative;
+    }
+    .panel.highlight { border-color: var(--metal-lo); box-shadow: 0 0 0 1px rgba(201,196,188,0.1); }
+    .panel-title {
+        font-size: 0.68rem; text-transform: uppercase;
+        letter-spacing: 0.14em; color: var(--ink-dim);
+        font-weight: 700; margin-bottom: 0.9rem;
+        display: flex; align-items: center; justify-content: space-between;
+        flex-wrap: wrap; gap: 0.5rem;
+    }
+    .panel-title .badge {
+        padding: 0.15rem 0.55rem; border-radius: 10px;
+        background: var(--metal); color: #131313;
+        font-size: 0.6rem; letter-spacing: 0.05em; font-weight: 700;
+        text-transform: none;
+    }
+    .badge.soft { background: rgba(201,196,188,0.15); color: var(--metal); }
+    .badge.success { background: rgba(106,191,123,0.18); color: var(--success); }
+    .badge.warn { background: rgba(212,160,23,0.18); color: var(--warn); }
+    .badge.error { background: rgba(217,83,79,0.18); color: var(--error); }
+    .badge.info { background: rgba(122,158,201,0.18); color: var(--info); }
+
+    input, select, textarea {
+        width: 100%; padding: 0.72rem 0.9rem;
+        border-radius: 10px; border: 1px solid var(--border-hi);
+        background: #0e0e0e; color: var(--ink);
+        font-family: inherit; font-size: 0.86rem;
+        transition: border-color 0.2s;
+    }
+    input:focus, select:focus, textarea:focus { outline: none; border-color: var(--metal); }
+    textarea { min-height: 80px; resize: vertical; line-height: 1.5; }
+    select {
+        -webkit-appearance: none; appearance: none;
+        background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path fill='%23c9c4bc' d='M0 0l5 6 5-6z'/></svg>");
+        background-repeat: no-repeat;
+        background-position: right 0.9rem center;
+        background-size: 10px;
+    }
+    label.field-label {
+        display: block; font-size: 0.68rem;
+        text-transform: uppercase; letter-spacing: 0.1em;
+        color: var(--ink-dim); margin-bottom: 0.4rem; font-weight: 600;
+    }
+
+    /* ── LANDING HERO ── */
+    .hero { padding: 3.5rem 0 2.5rem; text-align: center; }
+    .hero .badge-live {
+        display: inline-flex; align-items: center; gap: 0.5rem;
+        background: rgba(106,191,123,0.12); color: var(--success);
+        padding: 0.4rem 0.9rem; border-radius: 20px;
+        font-size: 0.72rem; font-weight: 600; margin-bottom: 1.4rem;
+        border: 1px solid rgba(106,191,123,0.25);
+    }
+    .hero .badge-live::before {
+        content: ''; width: 7px; height: 7px; border-radius: 50%;
+        background: var(--success); box-shadow: 0 0 8px var(--success);
+        animation: pulse 1.6s infinite;
+    }
+    @keyframes pulse { 0%,100% { opacity:1; transform:scale(1) } 50% { opacity:0.5; transform:scale(0.85) } }
+    .hero h1 {
+        font-size: clamp(2rem, 5.5vw, 3.4rem); font-weight: 800;
+        letter-spacing: -0.025em; line-height: 1.05; margin-bottom: 1.1rem;
+        color: var(--metal-hi);
+        text-shadow: 0 2px 0 rgba(0,0,0,0.3);
+    }
+    .hero h1 em { font-style: italic; color: var(--metal-lo); font-weight: 500; }
+    .hero p.lead {
+        max-width: 660px; margin: 0 auto 1.8rem;
+        color: var(--ink-dim); font-size: 1rem; line-height: 1.65;
+    }
+    .hero-cta { display: flex; gap: 0.8rem; justify-content: center; flex-wrap: wrap; }
+    .kpi-row {
+        display: grid; grid-template-columns: repeat(3, 1fr);
+        gap: 1rem; margin: 3rem 0 1rem;
+        padding: 1.8rem 1rem;
+        border-top: 1px solid var(--border);
+        border-bottom: 1px solid var(--border);
+    }
+    @media (max-width: 600px) { .kpi-row { grid-template-columns: 1fr; gap: 1.2rem; } }
+    .kpi-row .kpi { text-align: center; }
+    .kpi-row .kpi .val {
+        font-size: 2.2rem; font-weight: 800;
+        color: var(--metal-hi); letter-spacing: -0.02em;
+    }
+    .kpi-row .kpi .lbl { font-size: 0.72rem; color: var(--ink-dim); margin-top: 0.3rem; }
+
+    /* ── SIMULATOR ── */
+    .simulator {
+        background: linear-gradient(180deg, #1f1f1f 0%, #171717 100%);
+        border: 1px solid var(--metal-lo);
+        border-radius: var(--radius);
+        padding: 2rem 1.8rem; margin-top: 1.2rem;
+        box-shadow: var(--shadow-lg);
+        position: relative;
+    }
+    .simulator::before {
+        content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+        background: linear-gradient(90deg, transparent, var(--metal), transparent);
+    }
+    .sim-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.2rem; }
+    @media (max-width: 600px) { .sim-grid { grid-template-columns: 1fr; } }
+    .sim-results { display: grid; grid-template-columns: repeat(3,1fr); gap: 0.8rem; margin-top: 1.2rem; }
+    @media (max-width: 600px) { .sim-results { grid-template-columns: 1fr; } }
+    .sim-result {
+        background: #0e0e0e; border: 1px solid var(--border-hi);
+        border-radius: 12px; padding: 1.2rem 1rem; text-align: center;
+        transition: border-color 0.3s;
+    }
+    .sim-result.highlight {
+        border-color: var(--metal-lo);
+        box-shadow: inset 0 0 20px rgba(201,196,188,0.05);
+    }
+    .sim-result .val {
+        font-size: 1.6rem; font-weight: 800;
+        color: var(--metal-hi); letter-spacing: -0.02em;
+        transition: all 0.3s;
+    }
+    .sim-result.highlight .val { color: var(--success); }
+    .sim-result .lbl {
+        font-size: 0.65rem; color: var(--ink-dim);
+        margin-top: 0.4rem; text-transform: uppercase;
+        letter-spacing: 0.08em; font-weight: 600;
+    }
+    input[type="range"] {
+        width: 100%; height: 4px; border-radius: 2px;
+        background: var(--border-hi); -webkit-appearance: none;
+        appearance: none; outline: none; margin: 1rem 0;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none; appearance: none;
+        width: 22px; height: 22px; border-radius: 50%;
+        background: linear-gradient(180deg, var(--metal-hi), var(--metal-lo));
+        cursor: pointer;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.4);
+    }
+    input[type="range"]::-moz-range-thumb {
+        width: 22px; height: 22px; border-radius: 50%;
+        background: linear-gradient(180deg, var(--metal-hi), var(--metal-lo));
+        cursor: pointer; border: none;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+    }
+
+    /* ── DASHBOARD ── */
+    .dash-header { padding: 1.8rem 0 1rem; }
+    .dash-header h1 {
+        font-size: 1.7rem; font-weight: 800;
+        color: var(--metal-hi); letter-spacing: -0.02em;
+        margin-bottom: 0.3rem;
+    }
+    .dash-header p { font-size: 0.85rem; color: var(--ink-dim); }
+
+    /* ── ROLE SWITCHER ── */
+    .role-switcher {
+        display: flex; gap: 0.3rem;
+        background: var(--panel); border: 1px solid var(--border-hi);
+        border-radius: 12px; padding: 0.3rem;
+        margin-bottom: 1.2rem; flex-wrap: wrap;
+    }
+    .role-switcher button {
+        flex: 1; padding: 0.55rem 0.7rem;
+        background: transparent; border: none;
+        color: var(--ink-dim); border-radius: 8px;
+        font-size: 0.72rem; font-weight: 600; cursor: pointer;
+        font-family: inherit; white-space: nowrap;
+        transition: all 0.15s;
+        min-width: 110px;
+    }
+    .role-switcher button:hover { color: var(--ink); background: var(--panel-2); }
+    .role-switcher button.active {
+        background: linear-gradient(180deg, var(--metal-hi), var(--metal-lo));
+        color: #131313;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.4);
+    }
+
+    /* ── METRICS ── */
+    .metrics-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 0.75rem; margin-bottom: 1rem;
+    }
+    .metric-card {
+        background: linear-gradient(180deg, #1f1f1f 0%, #1a1a1a 100%);
+        border: 1px solid var(--border); border-radius: var(--radius);
+        padding: 1.1rem 1.2rem; position: relative; overflow: hidden;
+        transition: border-color 0.2s;
+    }
+    .metric-card:hover { border-color: var(--border-hi); }
+    .metric-card.highlight {
+        border-color: var(--metal-lo);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), 0 0 20px rgba(201,196,188,0.05);
+    }
+    .metric-card .m-lbl {
+        font-size: 0.62rem; text-transform: uppercase;
+        letter-spacing: 0.1em; color: var(--ink-dim);
+        font-weight: 700; margin-bottom: 0.5rem;
+    }
+    .metric-card .m-val {
+        font-size: 1.6rem; font-weight: 800;
+        color: var(--metal-hi); letter-spacing: -0.02em; line-height: 1.1;
+    }
+    .metric-card .m-trend {
+        font-size: 0.7rem; margin-top: 0.5rem;
+        display: inline-flex; align-items: center; gap: 0.25rem;
+        padding: 0.18rem 0.55rem; border-radius: 10px;
+        font-weight: 600;
+    }
+    .m-trend.up { background: rgba(106,191,123,0.12); color: var(--success); }
+    .m-trend.down { background: rgba(217,83,79,0.12); color: var(--error); }
+    .m-trend.neutral { background: rgba(122,158,201,0.12); color: var(--info); }
+
+    /* ── TILES (Module 3) ── */
+    .tiles-grid {
+        display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 0.75rem; margin-bottom: 1rem;
+    }
+    .tile {
+        background: linear-gradient(180deg, #1f1f1f 0%, #1a1a1a 100%);
+        border: 1px solid var(--border); border-radius: var(--radius);
+        padding: 1.1rem 1.2rem; cursor: pointer;
+        transition: border-color 0.2s, transform 0.15s;
+        position: relative;
+    }
+    .tile:hover { border-color: var(--border-hi); transform: translateY(-1px); }
+    .tile.alert { border-color: rgba(217,83,79,0.4); }
+    .tile.alert::before {
+        content: ''; position: absolute; top: 0.7rem; right: 0.7rem;
+        width: 8px; height: 8px; border-radius: 50%;
+        background: var(--error); box-shadow: 0 0 8px var(--error);
+        animation: pulse 1.4s infinite;
+    }
+    .tile .tile-header {
+        display: flex; align-items: center; gap: 0.6rem;
+        margin-bottom: 0.6rem;
+    }
+    .tile .tile-icon { font-size: 1.3rem; }
+    .tile .tile-title {
+        font-size: 0.65rem; text-transform: uppercase;
+        letter-spacing: 0.1em; color: var(--ink-dim);
+        font-weight: 700;
+    }
+    .tile .tile-count {
+        font-size: 1.7rem; font-weight: 800;
+        color: var(--metal-hi); letter-spacing: -0.02em;
+        line-height: 1;
+    }
+    .tile .tile-sub {
+        font-size: 0.72rem; color: var(--ink-dim); margin-top: 0.3rem;
+    }
+    .tile .tile-actions {
+        display: flex; gap: 0.3rem; margin-top: 0.7rem; flex-wrap: wrap;
+    }
+
+    /* ── SECTION TABS ── */
+    .section-tabs {
+        display: flex; gap: 0.35rem; overflow-x: auto;
+        scrollbar-width: none; margin-bottom: 1rem;
+        padding-bottom: 0.5rem; border-bottom: 1px solid var(--border);
+    }
+    .section-tabs::-webkit-scrollbar { display: none; }
+    .section-tab {
+        padding: 0.5rem 0.9rem; border-radius: 8px;
+        background: transparent; border: none;
+        color: var(--ink-dim); font-family: inherit;
+        font-size: 0.76rem; font-weight: 600; cursor: pointer;
+        white-space: nowrap;
+        display: flex; align-items: center; gap: 0.3rem;
+        transition: all 0.15s;
+    }
+    .section-tab:hover { color: var(--ink); }
+    .section-tab.active {
+        background: var(--panel-2); color: var(--metal-hi);
+        border: 1px solid var(--border-hi);
+    }
+    .sub-section { display: none; }
+    .sub-section.active { display: block; animation: fadeIn 0.25s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* ── PROPERTY CARDS ── */
+    .properties-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 0.9rem;
+    }
+    .property-card {
+        background: var(--panel); border: 1px solid var(--border);
+        border-radius: var(--radius); overflow: hidden;
+        transition: all 0.2s; cursor: pointer;
+    }
+    .property-card:hover {
+        border-color: var(--metal-lo);
+        transform: translateY(-2px);
+        box-shadow: var(--shadow);
+    }
+    .property-card .pc-img {
+        aspect-ratio: 16/10;
+        background: linear-gradient(135deg, #2a2a2a, #1a1a1a);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 2.8rem; opacity: 0.5; position: relative;
+    }
+    .property-card .pc-channels {
+        position: absolute; top: 8px; left: 8px;
+        display: flex; gap: 0.25rem;
+    }
+    .ch-chip {
+        width: 24px; height: 24px; border-radius: 6px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 0.72rem; font-weight: 800; color: #fff;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+    }
+    .ch-airbnb { background: var(--airbnb); }
+    .ch-booking { background: var(--booking); }
+    .ch-expedia { background: var(--expedia); color: #000; }
+    .ch-vrbo { background: var(--vrbo); }
+    .ch-direct { background: var(--metal); color: #131313; }
+    .property-card .pc-body { padding: 1rem 1.1rem; }
+    .property-card .pc-name {
+        font-size: 0.95rem; font-weight: 700;
+        color: var(--metal-hi); margin-bottom: 0.25rem;
+    }
+    .property-card .pc-city {
+        font-size: 0.75rem; color: var(--ink-dim);
+        margin-bottom: 0.7rem;
+    }
+    .property-card .pc-stats {
+        display: flex; gap: 1.1rem;
+        font-size: 0.7rem; color: var(--ink-dim);
+        padding-top: 0.7rem; border-top: 1px solid var(--border);
+    }
+    .property-card .pc-stats strong {
+        color: var(--metal-hi); display: block;
+        font-size: 0.85rem; font-weight: 700;
+    }
+
+    /* ── CALENDAR ── */
+    .calendar-header {
+        display: flex; justify-content: space-between;
+        align-items: center; margin-bottom: 0.9rem; flex-wrap: wrap; gap: 0.5rem;
+    }
+    .calendar-header .month {
+        font-size: 1.1rem; font-weight: 800; color: var(--metal-hi);
+    }
+    .calendar-header .nav-btns { display: flex; gap: 0.3rem; }
+    .calendar-header button {
+        width: 34px; height: 34px;
+        background: var(--panel); border: 1px solid var(--border-hi);
+        color: var(--ink); border-radius: 8px; cursor: pointer;
+        font-size: 0.85rem; font-family: inherit;
+        transition: all 0.15s;
+    }
+    .calendar-header button:hover { border-color: var(--metal); background: var(--panel-2); }
+    .calendar-grid {
+        display: grid; grid-template-columns: repeat(7, 1fr);
+        gap: 3px; background: var(--border);
+        border: 1px solid var(--border);
+        border-radius: var(--radius); overflow: hidden;
+    }
+    .cal-day-header {
+        background: var(--panel-2); padding: 0.55rem 0;
+        text-align: center; font-size: 0.62rem;
+        text-transform: uppercase; letter-spacing: 0.1em;
+        color: var(--ink-faint); font-weight: 700;
+    }
+    .cal-day {
+        background: var(--panel); padding: 0.6rem 0.3rem;
+        text-align: center; font-size: 0.78rem;
+        color: var(--ink); min-height: 56px;
+        cursor: pointer; position: relative;
+        transition: background 0.15s;
+    }
+    .cal-day:hover { background: var(--panel-2); }
+    .cal-day.empty { background: #0e0e0e; color: var(--ink-faint); cursor: default; }
+    .cal-day.today { background: rgba(201,196,188,0.08); font-weight: 700; }
+    .cal-day .day-num { font-size: 0.82rem; }
+    .cal-day.booked::after,
+    .cal-day.available::after,
+    .cal-day.blocked::after {
+        content: ''; position: absolute;
+        bottom: 5px; left: 50%; transform: translateX(-50%);
+        width: 6px; height: 6px; border-radius: 50%;
+    }
+    .cal-day.booked::after { background: var(--success); box-shadow: 0 0 6px var(--success); }
+    .cal-day.available::after { background: var(--metal-lo); }
+    .cal-day.blocked::after { background: var(--error); }
+    .cal-legend {
+        display: flex; gap: 1rem; font-size: 0.68rem;
+        color: var(--ink-dim); margin: 0.9rem 0; flex-wrap: wrap;
+    }
+    .cal-legend span { display: flex; align-items: center; gap: 0.35rem; }
+    .cal-legend span::before {
+        content: ''; width: 8px; height: 8px; border-radius: 50%;
+    }
+    .cal-legend .lg-booked::before { background: var(--success); }
+    .cal-legend .lg-available::before { background: var(--metal-lo); }
+    .cal-legend .lg-blocked::before { background: var(--error); }
+
+    /* ── LIST ITEMS ── */
+    .list-item {
+        display: flex; gap: 0.85rem; align-items: center;
+        background: var(--panel); border: 1px solid var(--border);
+        border-radius: var(--radius-sm); padding: 0.9rem 1rem;
+        margin-bottom: 0.5rem;
+        transition: border-color 0.15s;
+    }
+    .list-item:hover { border-color: var(--border-hi); }
+    .list-item .li-date {
+        flex-shrink: 0; text-align: center;
+        background: var(--panel-2); border-radius: 8px;
+        padding: 0.45rem 0.75rem; min-width: 48px;
+    }
+    .list-item .li-date .li-day {
+        font-size: 1.15rem; font-weight: 800;
+        color: var(--metal-hi); line-height: 1;
+    }
+    .list-item .li-date .li-month {
+        font-size: 0.6rem; text-transform: uppercase;
+        letter-spacing: 0.08em; color: var(--ink-dim);
+        margin-top: 2px; font-weight: 600;
+    }
+    .list-item .li-content { flex: 1; min-width: 0; }
+    .list-item .li-title {
+        font-size: 0.88rem; font-weight: 600;
+        color: var(--metal-hi); margin-bottom: 0.15rem;
+        overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .list-item .li-sub {
+        font-size: 0.72rem; color: var(--ink-dim);
+        overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .list-item .li-right { text-align: right; flex-shrink: 0; }
+    .list-item .li-amount {
+        font-size: 0.92rem; font-weight: 700;
+        color: var(--success); font-variant-numeric: tabular-nums;
+    }
+    .li-status {
+        display: inline-block; font-size: 0.62rem;
+        padding: 0.15rem 0.55rem; border-radius: 10px;
+        letter-spacing: 0.05em; text-transform: uppercase;
+        font-weight: 700; margin-top: 0.2rem;
+    }
+    .li-status.confirmed { background: rgba(106,191,123,0.15); color: var(--success); }
+    .li-status.pending { background: rgba(212,160,23,0.15); color: var(--warn); }
+    .li-status.cancelled { background: rgba(217,83,79,0.15); color: var(--error); }
+    .li-status.checked_in { background: rgba(122,158,201,0.15); color: var(--info); }
+    .li-status.checked_out { background: rgba(138,133,126,0.2); color: var(--ink-dim); }
+    .li-status.done { background: rgba(106,191,123,0.15); color: var(--success); }
+    .li-status.planned { background: rgba(212,160,23,0.15); color: var(--warn); }
+
+    /* ── 4 QUADRANTS (Module 2) ── */
+    .quadrants-grid {
+        display: grid; grid-template-columns: 1fr 1fr;
+        gap: 0.8rem; margin-bottom: 1rem;
+    }
+    @media (max-width: 720px) { .quadrants-grid { grid-template-columns: 1fr; } }
+    .quadrant {
+        background: var(--panel); border: 1px solid var(--border);
+        border-radius: var(--radius); padding: 1.1rem;
+        position: relative;
+    }
+    .quadrant.alert { border-color: rgba(217,83,79,0.4); }
+    .quadrant.alert::before {
+        content: '⚠'; position: absolute; top: 0.7rem; right: 0.9rem;
+        color: var(--error); font-size: 1rem;
+    }
+    .quadrant-header {
+        display: flex; align-items: center; gap: 0.55rem;
+        margin-bottom: 0.85rem;
+    }
+    .quadrant-header .q-icon { font-size: 1.1rem; }
+    .quadrant-header .q-title {
+        font-size: 0.65rem; text-transform: uppercase;
+        letter-spacing: 0.1em; color: var(--ink-dim);
+        font-weight: 700;
+    }
+    .quadrant-body { font-size: 0.85rem; }
+    .q-row {
+        display: flex; justify-content: space-between;
+        align-items: center; padding: 0.4rem 0;
+        border-bottom: 1px solid var(--border);
+    }
+    .q-row:last-child { border-bottom: none; }
+    .q-row .q-label { font-size: 0.72rem; color: var(--ink-dim); }
+    .q-row .q-value { font-size: 0.82rem; color: var(--ink); font-weight: 600; }
+    .q-avatar {
+        width: 44px; height: 44px; border-radius: 50%;
+        background: linear-gradient(180deg, var(--metal-hi), var(--metal-lo));
+        display: flex; align-items: center; justify-content: center;
+        font-size: 0.95rem; font-weight: 800; color: #131313;
+    }
+    .q-message-preview {
+        background: var(--panel-2); border-radius: 8px;
+        padding: 0.6rem 0.75rem; margin-top: 0.5rem;
+        font-size: 0.78rem; color: var(--ink);
+        line-height: 1.45;
+    }
+    .q-code {
+        font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+        font-size: 1rem; letter-spacing: 0.15em;
+        color: var(--metal-hi); font-weight: 700;
+    }
+    .q-code.masked { color: var(--ink-faint); }
+    .q-progress {
+        height: 6px; background: var(--border-hi);
+        border-radius: 3px; overflow: hidden; margin-top: 0.5rem;
+    }
+    .q-progress-bar {
+        height: 100%; background: linear-gradient(90deg, var(--metal-hi), var(--metal-lo));
+        border-radius: 3px; transition: width 0.5s ease;
+    }
+
+    /* ── HOUSEKEEPING CHECKLIST ── */
+    .checklist-section {
+        background: var(--panel); border: 1px solid var(--border);
+        border-radius: var(--radius); padding: 1rem;
+        margin-bottom: 0.7rem;
+    }
+    .checklist-section h4 {
+        font-size: 0.85rem; font-weight: 700;
+        color: var(--metal-hi); margin-bottom: 0.6rem;
+        display: flex; align-items: center; gap: 0.4rem;
+    }
+    .checklist-item {
+        display: flex; align-items: flex-start; gap: 0.6rem;
+        padding: 0.5rem 0; font-size: 0.82rem;
+        border-bottom: 1px solid var(--border);
+    }
+    .checklist-item:last-child { border-bottom: none; }
+    .checklist-item input[type="checkbox"] {
+        width: 18px; height: 18px; margin-top: 2px;
+        accent-color: var(--metal);
+        cursor: pointer; flex-shrink: 0;
+    }
+    .checklist-item label { cursor: pointer; flex: 1; }
+    .checklist-item .ci-photo {
+        font-size: 0.65rem; color: var(--metal);
+        cursor: pointer; margin-left: auto;
+    }
+
+    /* ── IOT LOCK PANEL ── */
+    .iot-panel {
+        background: linear-gradient(135deg, #1a1a1a, #232323);
+        border: 1px solid var(--metal-lo);
+        border-radius: var(--radius); padding: 1.2rem;
+        position: relative; overflow: hidden;
+    }
+    .iot-panel::before {
+        content: ''; position: absolute; top: -30px; right: -30px;
+        width: 100px; height: 100px; border-radius: 50%;
+        background: radial-gradient(circle, rgba(201,196,188,0.15), transparent);
+    }
+    .iot-lock-icon {
+        font-size: 2.4rem; margin-bottom: 0.6rem;
+        display: inline-block;
+    }
+    .iot-status {
+        display: inline-flex; align-items: center; gap: 0.4rem;
+        padding: 0.25rem 0.7rem; border-radius: 12px;
+        font-size: 0.68rem; font-weight: 700;
+        text-transform: uppercase; letter-spacing: 0.05em;
+    }
+    .iot-status.connected { background: rgba(106,191,123,0.15); color: var(--success); }
+    .iot-status.connected::before {
+        content: ''; width: 6px; height: 6px; border-radius: 50%;
+        background: var(--success); box-shadow: 0 0 6px var(--success);
+    }
+
+    /* ── MESSAGES ── */
+    .chat-list { display: flex; flex-direction: column; gap: 0.4rem; }
+    .chat-item {
+        display: flex; gap: 0.75rem; align-items: center;
+        background: var(--panel); border: 1px solid var(--border);
+        border-radius: var(--radius); padding: 0.9rem 1rem;
+        cursor: pointer; transition: border-color 0.15s;
+    }
+    .chat-item:hover { border-color: var(--metal-lo); }
+    .chat-item .ci-avatar {
+        width: 42px; height: 42px; border-radius: 50%;
+        background: linear-gradient(180deg, var(--metal-hi), var(--metal-lo));
+        display: flex; align-items: center; justify-content: center;
+        font-size: 0.9rem; font-weight: 800; color: #131313;
+        flex-shrink: 0;
+    }
+    .chat-item .ci-content { flex: 1; min-width: 0; }
+    .chat-item .ci-name {
+        font-size: 0.86rem; font-weight: 600;
+        color: var(--metal-hi); display: flex; align-items: center; gap: 0.4rem;
+    }
+    .chat-item .ci-msg {
+        font-size: 0.75rem; color: var(--ink-dim);
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .chat-item .ci-meta { text-align: right; flex-shrink: 0; }
+    .chat-item .ci-time { font-size: 0.68rem; color: var(--ink-faint); }
+    .chat-item .ci-unread {
+        display: inline-block; margin-top: 0.3rem;
+        background: var(--error); color: #fff;
+        font-size: 0.62rem; font-weight: 700;
+        min-width: 18px; height: 18px; line-height: 18px;
+        border-radius: 9px; padding: 0 6px; text-align: center;
+    }
+
+    /* ── BAR CHART ── */
+    .bar-chart {
+        background: var(--panel); border: 1px solid var(--border);
+        border-radius: var(--radius); padding: 1.3rem 1.1rem;
+    }
+    .bar-chart .bars {
+        display: flex; align-items: flex-end;
+        gap: 0.5rem; height: 130px; margin-bottom: 0.7rem;
+    }
+    .bar-chart .bar {
+        flex: 1;
+        background: linear-gradient(180deg, var(--metal) 0%, var(--metal-lo) 100%);
+        border-radius: 5px 5px 0 0; min-height: 4px;
+        position: relative; cursor: pointer;
+        transition: filter 0.2s, transform 0.15s;
+    }
+    .bar-chart .bar:hover { filter: brightness(1.2); transform: translateY(-2px); }
+    .bar-chart .bar.current {
+        background: linear-gradient(180deg, var(--metal-hi) 0%, var(--metal) 100%);
+        box-shadow: 0 0 14px rgba(201,196,188,0.35);
+    }
+    .bar-chart .bar .bar-val {
+        position: absolute; top: -20px; left: 50%;
+        transform: translateX(-50%);
+        font-size: 0.62rem; color: var(--metal-hi);
+        font-weight: 700; white-space: nowrap;
+        opacity: 0; transition: opacity 0.2s;
+    }
+    .bar-chart .bar:hover .bar-val { opacity: 1; }
+    .bar-chart .labels { display: flex; gap: 0.5rem; }
+    .bar-chart .labels span {
+        flex: 1; text-align: center;
+        font-size: 0.62rem; color: var(--ink-faint);
+        text-transform: uppercase; font-weight: 600;
+        letter-spacing: 0.05em;
+    }
+    .bar-chart .labels span.current { color: var(--metal-hi); font-weight: 800; }
+
+    /* ── MODAL ── */
+    .modal-overlay {
+        position: fixed; inset: 0; z-index: 200;
+        background: rgba(0,0,0,0.8);
+        backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+        display: none; align-items: center; justify-content: center;
+        padding: 1rem;
+        animation: fadeIn 0.2s;
+    }
+    .modal-overlay.visible { display: flex; }
+    .modal {
+        background: linear-gradient(180deg, #1f1f1f, #171717);
+        border: 1px solid var(--metal-lo);
+        border-radius: var(--radius); padding: 1.5rem;
+        width: 100%; max-width: 580px; max-height: 90vh;
+        overflow-y: auto; box-shadow: var(--shadow-lg);
+        animation: modalIn 0.25s ease;
+    }
+    @keyframes modalIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+    .modal::-webkit-scrollbar { width: 6px; }
+    .modal::-webkit-scrollbar-track { background: var(--border); border-radius: 3px; }
+    .modal::-webkit-scrollbar-thumb { background: var(--metal-lo); border-radius: 3px; }
+    .modal-header {
+        display: flex; justify-content: space-between;
+        align-items: flex-start; margin-bottom: 1rem; gap: 0.8rem;
+    }
+    .modal-header h3 {
+        font-size: 1.1rem; font-weight: 800;
+        color: var(--metal-hi); letter-spacing: -0.01em;
+    }
+    .modal-header .close-btn {
+        background: transparent; border: none; color: var(--ink-dim);
+        font-size: 1.3rem; cursor: pointer; padding: 0.2rem 0.5rem;
+        line-height: 1; transition: color 0.15s;
+    }
+    .modal-header .close-btn:hover { color: var(--ink); }
+    .modal-field { margin-bottom: 0.9rem; }
+    .modal-field .mf-label {
+        font-size: 0.65rem; text-transform: uppercase;
+        letter-spacing: 0.1em; color: var(--ink-dim);
+        margin-bottom: 0.3rem; font-weight: 700;
+    }
+    .modal-field .mf-value { font-size: 0.88rem; color: var(--ink); }
+
+    /* ── TOAST ── */
+    .toast {
+        position: fixed; top: 1.2rem; left: 50%;
+        transform: translateX(-50%) translateY(-120px);
+        background: var(--metal); color: #131313;
+        padding: 0.85rem 1.5rem; border-radius: 10px;
+        font-size: 0.82rem; font-weight: 700;
+        box-shadow: var(--shadow-lg);
+        z-index: 500; opacity: 0;
+        transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1), opacity 0.35s;
+        max-width: 90vw; text-align: center;
+        display: flex; align-items: center; gap: 0.5rem;
+    }
+    .toast.visible { transform: translateX(-50%) translateY(0); opacity: 1; }
+    .toast.success { background: var(--success); color: #fff; }
+    .toast.error { background: var(--error); color: #fff; }
+    .toast.warn { background: var(--warn); color: #131313; }
+
+    /* ── PWA BANNER ── */
+    .pwa-banner {
+        position: fixed; bottom: 0; left: 0; right: 0;
+        background: linear-gradient(180deg, #232323, #131313);
+        border-top: 1px solid var(--metal); z-index: 150;
+        padding: 0.85rem 1rem; display: none;
+        box-shadow: 0 -8px 30px rgba(0,0,0,0.5);
+    }
+    .pwa-banner.visible { display: block; animation: slideUp 0.35s ease; }
+    @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+    .pwa-banner-inner {
+        max-width: 820px; margin: 0 auto;
+        display: flex; align-items: center; gap: 0.8rem;
+    }
+    .pwa-banner .pb-icon { font-size: 1.6rem; flex-shrink: 0; }
+    .pwa-banner .pb-text { flex: 1; min-width: 0; }
+    .pwa-banner .pb-title {
+        font-size: 0.85rem; font-weight: 700; color: var(--metal-hi);
+    }
+    .pwa-banner .pb-sub { font-size: 0.68rem; color: var(--ink-dim); }
+
+    /* ── BOTTOM NAV ── */
+    .bottom-nav {
+        position: fixed; bottom: 0; left: 0; right: 0;
+        background: rgba(19,19,19,0.96);
+        backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+        border-top: 1px solid var(--border);
+        display: none; justify-content: space-around;
+        padding: 0.45rem 0 0.6rem; z-index: 90;
+    }
+    .bottom-nav .bn-item {
+        flex: 1; padding: 0.4rem 0.2rem;
+        background: transparent; border: none;
+        color: var(--ink-faint); cursor: pointer;
+        display: flex; flex-direction: column; align-items: center; gap: 0.15rem;
+        font-family: inherit; font-size: 0.58rem; font-weight: 600;
+        transition: color 0.2s;
+    }
+    .bottom-nav .bn-item.active { color: var(--metal-hi); }
+    .bottom-nav .bn-item .bn-icon { font-size: 1.15rem; }
+    @media (max-width: 760px) {
+        .bottom-nav { display: flex; }
+        .view { padding-bottom: 85px; }
+    }
+
+    /* ── DOCUMENTATION ── */
+    .doc-section {
+        background: var(--panel); border: 1px solid var(--border);
+        border-radius: var(--radius); padding: 1.3rem;
+        margin-bottom: 1rem;
+    }
+    .doc-section h3 {
+        font-size: 0.95rem; font-weight: 800;
+        color: var(--metal-hi); margin-bottom: 0.7rem;
+        display: flex; align-items: center; gap: 0.5rem;
+    }
+    .doc-section h3 .num {
+        display: inline-flex; align-items: center; justify-content: center;
+        width: 24px; height: 24px; border-radius: 50%;
+        background: linear-gradient(180deg, var(--metal-hi), var(--metal-lo));
+        color: #131313; font-size: 0.7rem; font-weight: 800;
+    }
+    .doc-section pre {
+        background: #0a0a0a; border: 1px solid var(--border);
+        border-radius: 8px; padding: 1rem;
+        font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+        font-size: 0.7rem; color: #c9c4bc;
+        overflow-x: auto; line-height: 1.55;
+        white-space: pre;
+    }
+    .doc-section p {
+        font-size: 0.82rem; color: var(--ink-dim);
+        line-height: 1.65; margin-bottom: 0.7rem;
+    }
+    .doc-section ul { font-size: 0.82rem; color: var(--ink-dim); line-height: 1.7; padding-left: 1.2rem; }
+    .doc-section ul li { margin-bottom: 0.2rem; }
+    .doc-section .checklist {
+        list-style: none; padding-left: 0; margin-top: 0.6rem;
+    }
+    .doc-section .checklist li {
+        padding: 0.35rem 0; display: flex; gap: 0.5rem;
+        border-bottom: 1px solid var(--border);
+    }
+    .doc-section .checklist li:last-child { border-bottom: none; }
+    .doc-section .checklist li::before {
+        content: '□'; color: var(--metal); font-weight: 700;
+    }
+
+    /* ── MISC ── */
+    .empty-state {
+        text-align: center; padding: 2.5rem 1rem;
+        color: var(--ink-dim); font-size: 0.85rem;
+    }
+    .empty-state .es-icon {
+        font-size: 2.8rem; opacity: 0.35; margin-bottom: 0.7rem;
+        display: block;
+    }
+    .form-grid {
+        display: grid; grid-template-columns: 1fr 1fr; gap: 0.85rem;
+    }
+    @media (max-width: 600px) { .form-grid { grid-template-columns: 1fr; } }
+    .form-grid .full { grid-column: 1 / -1; }
+    .hidden { display: none !important; }
+    .text-success { color: var(--success); }
+    .text-error { color: var(--error); }
+    .text-warn { color: var(--warn); }
+    .text-metal { color: var(--metal-hi); }
+    .text-dim { color: var(--ink-dim); }
+</style>
+</head>
+<body>
+
+<!-- ═══ LOGIN ═══ -->
+<div class="login-screen" id="login-screen">
+    <div class="login-card">
+        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <linearGradient id="mlg" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stop-color="#e8e4dd"/>
+                    <stop offset="50%" stop-color="#c9c4bc"/>
+                    <stop offset="100%" stop-color="#8a857e"/>
+                </linearGradient>
+            </defs>
+            <path d="M 12 82 L 12 40 A 38 38 0 0 1 88 40 L 88 82" fill="none" stroke="url(#mlg)" stroke-width="3.5" stroke-linecap="round"/>
+            <path d="M 24 82 L 24 44 A 26 26 0 0 1 76 44 L 76 82" fill="none" stroke="url(#mlg)" stroke-width="3.5" stroke-linecap="round"/>
+            <circle cx="50" cy="52" r="11" fill="none" stroke="url(#mlg)" stroke-width="3.5"/>
+            <path d="M 43 60 L 41 82 M 57 60 L 59 82" fill="none" stroke="url(#mlg)" stroke-width="3.5" stroke-linecap="round"/>
+            <line x1="12" y1="82" x2="88" y2="82" stroke="url(#mlg)" stroke-width="3.5" stroke-linecap="round"/>
+        </svg>
+        <h1>LGC</h1>
+        <div class="lc-sub">Les Grands Concierges</div>
+        <input type="email" id="login-email" placeholder="votre@email.fr" value="demo@lgc.fr" autocomplete="email">
+        <input type="password" id="login-pass" placeholder="Mot de passe" value="demo" autocomplete="current-password">
+        <button class="btn btn-metal" style="width:100%;" onclick="doLogin()">Se connecter</button>
+        <div class="divider">ou</div>
+        <button class="oauth-btn" onclick="doLogin()">🔵 Continuer avec Google</button>
+        <button class="oauth-btn" onclick="doLogin()">🟦 Continuer avec Microsoft</button>
+        <div class="demo-hint">
+            Démo : n'importe quel identifiant fonctionne.<br>
+            Changez ensuite de rôle dans le dashboard.
+        </div>
+        <div class="lc-version">v2.0 · 29 OCT 2026</div>
+    </div>
+</div>
+
+<!-- ═══ TOPBAR ═══ -->
+<div class="topbar" id="topbar" style="display:none;">
+    <div class="topbar-inner">
+        <div class="topbar-brand" onclick="switchView('dashboard')">
+            <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="mtp" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" stop-color="#e8e4dd"/>
+                        <stop offset="50%" stop-color="#c9c4bc"/>
+                        <stop offset="100%" stop-color="#8a857e"/>
+                    </linearGradient>
+                </defs>
+                <path d="M 12 82 L 12 40 A 38 38 0 0 1 88 40 L 88 82" fill="none" stroke="url(#mtp)" stroke-width="3.5" stroke-linecap="round"/>
+                <path d="M 24 82 L 24 44 A 26 26 0 0 1 76 44 L 76 82" fill="none" stroke="url(#mtp)" stroke-width="3.5" stroke-linecap="round"/>
+                <circle cx="50" cy="52" r="11" fill="none" stroke="url(#mtp)" stroke-width="3.5"/>
+                <path d="M 43 60 L 41 82 M 57 60 L 59 82" fill="none" stroke="url(#mtp)" stroke-width="3.5" stroke-linecap="round"/>
+                <line x1="12" y1="82" x2="88" y2="82" stroke="url(#mtp)" stroke-width="3.5" stroke-linecap="round"/>
+            </svg>
+            <div>
+                <div class="brand-text">LGC</div>
+                <div class="brand-sub">Suite</div>
+            </div>
+        </div>
+        <div class="topbar-tabs">
+            <button class="topbar-tab" data-view="landing">🏠 Accueil</button>
+            <button class="topbar-tab active" data-view="dashboard">⚡ Activité</button>
+            <button class="topbar-tab" data-view="properties">🏢 Locations</button>
+            <button class="topbar-tab" data-view="calendar">📅 Calendriers</button>
+            <button class="topbar-tab" data-view="bookings">📋 Réservations</button>
+            <button class="topbar-tab" data-view="pricing">💶 Tarifs</button>
+            <button class="topbar-tab" data-view="messages">💬 Messages<span class="tab-badge" id="msg-badge">3</span></button>
+            <button class="topbar-tab" data-view="tasks">🧹 Tâches</button>
+            <button class="topbar-tab" data-view="stats">📈 Stats</button>
+            <button class="topbar-tab" data-view="ai">🤖 IA</button>
+            <button class="topbar-tab" data-view="architecture">🏗️ Architecture</button>
+        </div>
+        <div class="topbar-user" onclick="switchView('profile')">
+            <div class="avatar" id="topbar-avatar">MK</div>
+            <div>
+                <div class="u-name" id="topbar-name">Malika K.</div>
+                <div class="u-role" id="topbar-role">Conciergerie</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ VIEW : LANDING ═══ -->
+<div class="view" id="view-landing">
+    <div class="container">
+        <section class="hero">
+            <div class="badge-live">Disponible à Montreuil & communes limitrophes</div>
+            <h1>Votre logement loue.<br><em>Vous, vous reposez.</em></h1>
+            <p class="lead">
+                Conciergerie Airbnb locale. Nous gérons tout — annonce, voyageurs, ménage, clés — et nous synchronisons vos calendriers Airbnb, Booking, Expedia et Vrbo depuis une seule interface.
+            </p>
+            <div class="hero-cta">
+                <button class="btn btn-metal" onclick="document.getElementById('simulator-section').scrollIntoView({behavior:'smooth'})">Simuler mes revenus →</button>
+                <button class="btn btn-ghost" onclick="switchView('dashboard')">Voir la démo live</button>
+            </div>
+            <div class="kpi-row">
+                <div class="kpi"><div class="val">+34%</div><div class="lbl">de revenus vs gestion solo</div></div>
+                <div class="kpi"><div class="val">4.93</div><div class="lbl">note voyageurs moyenne</div></div>
+                <div class="kpi"><div class="val">72h</div><div class="lbl">pour lancer votre annonce</div></div>
+            </div>
+        </section>
+
+        <section id="simulator-section" style="padding:2rem 0;">
+            <div class="panel-title"><span>Simulateur de revenus</span><span class="badge soft">Temps réel</span></div>
+            <div class="simulator">
+                <div class="sim-grid">
+                    <div>
+                        <label class="field-label">Commune</label>
+                        <select id="sim-commune">
+                            <option value="montreuil" data-base="85">Montreuil</option>
+                            <option value="bagnolet" data-base="80">Bagnolet</option>
+                            <option value="vincennes" data-base="120">Vincennes</option>
+                            <option value="pantin" data-base="82">Pantin</option>
+                            <option value="lilas" data-base="88">Les Lilas</option>
+                            <option value="rosny" data-base="78">Rosny-sous-Bois</option>
+                            <option value="saint-mande" data-base="130">Saint-Mandé</option>
+                            <option value="nogent" data-base="125">Nogent-sur-Marne</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="field-label">Type de bien</label>
+                        <select id="sim-type">
+                            <option value="studio" data-coef="0.85">Studio</option>
+                            <option value="t1" data-coef="1.0">T1</option>
+                            <option value="t2" data-coef="1.25" selected>T2</option>
+                            <option value="t3" data-coef="1.55">T3</option>
+                            <option value="t4" data-coef="1.9">T4 et +</option>
+                            <option value="maison" data-coef="2.3">Maison / Loft</option>
+                        </select>
+                    </div>
+                </div>
+                <label class="field-label">Nuits disponibles / mois : <strong id="sim-nights-val" style="color:var(--metal-hi);">15</strong></label>
+                <input type="range" id="sim-nights" min="5" max="30" value="15" step="1">
+                <div class="sim-results">
+                    <div class="sim-result"><div class="val" id="sim-brut">—</div><div class="lbl">Revenu brut mensuel</div></div>
+                    <div class="sim-result highlight"><div class="val" id="sim-net">—</div><div class="lbl">Revenu NET (après 18%)</div></div>
+                    <div class="sim-result"><div class="val" id="sim-annuel">—</div><div class="lbl">Projection annuelle</div></div>
+                </div>
+            </div>
+        </section>
+
+        <section style="padding:2rem 0;">
+            <div class="panel-title">Architecture &amp; fonctionnalités</div>
+            <p style="color:var(--ink-dim);font-size:0.85rem;line-height:1.7;margin-bottom:1rem;">
+                Channel Manager LGC : synchronisation Airbnb, Booking.com, Expedia et Vrbo. Calendrier unifié, tarification dynamique, messagerie centralisée, gestion des tâches ménage, statistiques RevPAR/ADR, automatisations IA, dashboard propriétaire, PWA installable sur mobile.
+            </p>
+            <button class="btn btn-ghost btn-sm" onclick="switchView('architecture')">Voir l'architecture technique complète →</button>
+        </section>
+    </div>
+</div>
+
+<!-- ═══ VIEW : DASHBOARD (Module 3 - 8 tuiles) ═══ -->
+<div class="view active" id="view-dashboard">
+    <div class="container">
+        <div class="dash-header">
+            <h1 id="dash-greeting">Bonjour Malika 👋</h1>
+            <p id="dash-sub">Vue d'activité · 29 octobre 2026</p>
+        </div>
+
+        <!-- Role Switcher -->
+        <div class="role-switcher" id="role-switcher">
+            <button class="active" data-role="concierge">🏢 Conciergerie</button>
+            <button data-role="owner">🏠 Propriétaire</button>
+            <button data-role="cleaner">🧹 Ménage</button>
+            <button data-role="technician">🔧 Maintenance</button>
+            <button data-role="admin">⚡ Super Admin</button>
+        </div>
+
+        <!-- Métriques -->
+        <div class="metrics-grid" id="metrics-grid"></div>
+
+        <!-- 8 tuiles (Module 3) -->
+        <div class="panel-title" style="margin-top:1.2rem;"><span>Activité du jour</span><span class="badge soft">8 tuiles</span></div>
+        <div class="tiles-grid" id="tiles-grid"></div>
+
+        <!-- Revenus -->
+        <div class="panel" style="margin-top:0.8rem;">
+            <div class="panel-title"><span>Revenus 6 derniers mois</span><span class="badge" id="rev-badge">—</span></div>
+            <div class="bar-chart">
+                <div class="bars" id="rev-bars"></div>
+                <div class="labels" id="rev-labels"></div>
+            </div>
+        </div>
+
+        <!-- Réservations à venir -->
+        <div class="panel" style="margin-top:1rem;">
+            <div class="panel-title"><span>Prochaines réservations</span><span class="badge" id="next-bookings-count">—</span></div>
+            <div id="next-bookings-list"></div>
+        </div>
+
+        <!-- Feed -->
+        <div class="panel" style="margin-top:1rem;">
+            <div class="panel-title"><span>Activité récente</span><span class="badge soft">Temps réel</span></div>
+            <div id="activity-feed"></div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ VIEW : PROPERTIES ═══ -->
+<div class="view" id="view-properties">
+    <div class="container">
+        <div class="dash-header">
+            <h1>Logements</h1>
+            <p>Gestion des biens, annonces et canaux de distribution</p>
+        </div>
+        <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:1rem;">
+            <button class="btn btn-metal btn-sm" onclick="openAddProperty()">+ Ajouter un logement</button>
+            <button class="btn btn-ghost btn-sm" onclick="showToast('Import photos — démo','warn')">📸 Importer photos</button>
+            <button class="btn btn-ghost btn-sm" onclick="showToast('Descriptions IA générées ✓','success')">🤖 Générer descriptions IA</button>
+        </div>
+        <div class="properties-grid" id="properties-grid"></div>
+    </div>
+</div>
+
+<!-- ═══ VIEW : CALENDAR ═══ -->
+<div class="view" id="view-calendar">
+    <div class="container">
+        <div class="dash-header">
+            <h1>Calendrier unifié</h1>
+            <p>Synchronisation bidirectionnelle Airbnb · Booking · Expedia · Vrbo</p>
+        </div>
+        <div class="panel" style="margin-bottom:1rem;">
+            <label class="field-label">Logement</label>
+            <select id="cal-property-filter" onchange="renderCalendar()"></select>
+        </div>
+        <div class="panel">
+            <div class="calendar-header">
+                <div class="month" id="cal-month">Octobre 2026</div>
+                <div class="nav-btns">
+                    <button onclick="changeMonth(-1)">←</button>
+                    <button onclick="changeMonth(1)">→</button>
+                </div>
+            </div>
+            <div class="calendar-grid" id="calendar-grid"></div>
+            <div class="cal-legend">
+                <span class="lg-booked">Réservé</span>
+                <span class="lg-available">Disponible</span>
+                <span class="lg-blocked">Bloqué</span>
+            </div>
+        </div>
+        <div class="panel" style="margin-top:1rem;">
+            <div class="panel-title"><span>État de synchronisation OTA</span><span class="badge success">Opérationnel</span></div>
+            <div id="sync-status"></div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ VIEW : BOOKINGS ═══ -->
+<div class="view" id="view-bookings">
+    <div class="container">
+        <div class="dash-header">
+            <h1>Réservations</h1>
+            <p>Centralisation des réservations multi-plateformes</p>
+        </div>
+        <div class="section-tabs">
+            <button class="section-tab active" onclick="filterBookings('all',this)">Toutes</button>
+            <button class="section-tab" onclick="filterBookings('confirmed',this)">Confirmées</button>
+            <button class="section-tab" onclick="filterBookings('pending',this)">En attente</button>
+            <button class="section-tab" onclick="filterBookings('checked_in',this)">Check-in</button>
+            <button class="section-tab" onclick="filterBookings('checked_out',this)">Check-out</button>
+            <button class="section-tab" onclick="filterBookings('cancelled',this)">Annulées</button>
+        </div>
+        <div id="bookings-list"></div>
+    </div>
+</div>
+
+<!-- ═══ VIEW : PRICING ═══ -->
+<div class="view" id="view-pricing">
+    <div class="container">
+        <div class="dash-header">
+            <h1>Tarification dynamique</h1>
+            <p>Règles de prix par saison, week-end, longue durée et événements</p>
+        </div>
+        <div class="section-tabs">
+            <button class="section-tab active" onclick="switchPricingTab('rules',this)">Règles</button>
+            <button class="section-tab" onclick="switchPricingTab('promos',this)">Promotions</button>
+            <button class="section-tab" onclick="switchPricingTab('ai',this)">Optimisation IA</button>
+        </div>
+        <div class="sub-section active" id="pricing-rules">
+            <div class="panel">
+                <div class="panel-title">
+                    <span>Règles actives</span>
+                    <button class="btn btn-metal btn-sm" onclick="showToast('Nouvelle règle — démo','success')">+ Règle</button>
+                </div>
+                <div id="pricing-rules-list"></div>
+            </div>
+        </div>
+        <div class="sub-section" id="pricing-promos">
+            <div class="panel">
+                <div class="panel-title"><span>Promotions automatiques</span></div>
+                <div id="pricing-promos-list"></div>
+            </div>
+        </div>
+        <div class="sub-section" id="pricing-ai">
+            <div class="panel">
+                <div class="panel-title"><span>Suggestions IA</span><span class="badge info">Beta</span></div>
+                <div id="pricing-ai-list"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ VIEW : MESSAGES ═══ -->
+<div class="view" id="view-messages">
+    <div class="container">
+        <div class="dash-header">
+            <h1>Messagerie centralisée</h1>
+            <p>Airbnb · Booking · Expedia · Vrbo · WhatsApp — dans une seule boîte</p>
+        </div>
+        <div class="panel" style="margin-bottom:1rem;">
+            <div class="panel-title"><span>Réponse automatique IA</span><span class="badge success">Actif</span></div>
+            <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.6rem;">
+                <button class="btn btn-ghost btn-sm" onclick="showToast('Modèles — démo','info')">📝 Modèles</button>
+                <button class="btn btn-success btn-sm" onclick="showToast('IA activée','success')">✓ IA activée</button>
+            </div>
+            <textarea placeholder="Modèle de bienvenue : Bonjour {prénom}, ravi de vous accueillir…">Modèle de bienvenue : Bonjour {prénom}, ravi de vous accueillir ! Voici les infos pour votre arrivée.</textarea>
+        </div>
+        <div class="chat-list" id="chat-list"></div>
+    </div>
+</div>
+
+<!-- ═══ VIEW : TASKS (Module 1 - Ménage) ═══ -->
+<div class="view" id="view-tasks">
+    <div class="container">
+        <div class="dash-header">
+            <h1>Tâches &amp; interventions</h1>
+            <p>Ménage · Maintenance · Inspections — attribution automatique</p>
+        </div>
+        <div class="section-tabs">
+            <button class="section-tab active" onclick="switchTaskTab('all',this)">Toutes</button>
+            <button class="section-tab" onclick="switchTaskTab('cleaning',this)">Ménage</button>
+            <button class="section-tab" onclick="switchTaskTab('maintenance',this)">Maintenance</button>
+            <button class="section-tab" onclick="switchTaskTab('inspection',this)">Inspections</button>
+        </div>
+        <div id="tasks-list"></div>
+    </div>
+</div>
+
+<!-- ═══ VIEW : STATS ═══ -->
+<div class="view" id="view-stats">
+    <div class="container">
+        <div class="dash-header">
+            <h1>Statistiques avancées</h1>
+            <p>RevPAR · ADR · Performance par plateforme et par logement</p>
+        </div>
+        <div class="metrics-grid" id="stats-metrics"></div>
+        <div class="panel" style="margin-top:1rem;">
+            <div class="panel-title"><span>Performance par plateforme</span></div>
+            <div id="platform-perf"></div>
+        </div>
+        <div class="panel" style="margin-top:1rem;">
+            <div class="panel-title"><span>Performance par logement</span></div>
+            <div id="property-perf"></div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ VIEW : AI ═══ -->
+<div class="view" id="view-ai">
+    <div class="container">
+        <div class="dash-header">
+            <h1>Automatisations IA</h1>
+            <p>Génération · Optimisation · Prévisions · Réponses voyageurs</p>
+        </div>
+        <div class="panel">
+            <div class="panel-title"><span>🤖 Assistant IA LGC</span><span class="badge info">GPT-4o</span></div>
+            <p style="font-size:0.85rem;color:var(--ink-dim);line-height:1.65;margin-bottom:1rem;">
+                Sélectionnez une action — l'IA génère une réponse contextuelle basée sur vos données réelles (réservations, logements, avis, saisonnalité).
+            </p>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:0.6rem;">
+                <button class="btn btn-ghost" onclick="runAI('description')">📝 Générer description</button>
+                <button class="btn btn-ghost" onclick="runAI('pricing')">💶 Optimiser prix</button>
+                <button class="btn btn-ghost" onclick="runAI('reply')">💬 Répondre voyageur</button>
+                <button class="btn btn-ghost" onclick="runAI('occupancy')">📈 Suggestions occupation</button>
+                <button class="btn btn-ghost" onclick="runAI('forecast')">🔮 Prévisions revenus</button>
+                <button class="btn btn-ghost" onclick="runAI('audit')">🔍 Audit qualité</button>
+            </div>
+            <div id="ai-output" style="margin-top:1.2rem;"></div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ VIEW : ARCHITECTURE ═══ -->
+<div class="view" id="view-architecture">
+    <div class="container">
+        <div class="dash-header">
+            <h1>Architecture technique</h1>
+            <p>Schéma DB · Diagrammes UML · API REST · Cloud · Go-live checklist</p>
+        </div>
+
+        <div class="doc-section">
+            <h3><span class="num">1</span> Vue système</h3>
+            <p>PWA Next.js 14 installable + API Gateway NestJS + PostgreSQL 16 multi-tenant + Redis 7 (cache/queues) + S3/Azure Blob (photos) + connecteurs OTA dédiés + moteur IA séparé.</p>
+            <pre>┌─────────────────────────────────────────────┐
+│  PWA Next.js 14 + TS + Tailwind + shadcn/ui│
+│  Site public · PWA · Dashboard multi-rôles │
+└──────────────────┬──────────────────────────┘
+                   │ HTTPS / REST / WSS
+┌──────────────────▼──────────────────────────┐
+│         API Gateway (NestJS, DDD)           │
+│  Auth · Property · Calendar · Booking       │
+│  Pricing · Messaging · Task · Stats         │
+│  AI Engine · Channel Adapters · IoT Locks   │
+└──┬────────────┬────────────┬────────────────┘
+   │            │            │
+┌──▼─────┐  ┌───▼───┐    ┌──▼──────────┐
+│Postgres│  │Redis  │    │S3/Azure Blob│
+│Aurora  │  │Cache  │    │Photos/Docs  │
+│Multi-t │  │Queues │    │Versioning   │
+└────────┘  └───────┘    └─────────────┘
+                   │
+   ┌───────────────┼──────────────────────┐
+   ▼               ▼                      ▼
+┌──────┐      ┌─────────┐            ┌─────────┐
+│Airbnb│      │Booking  │            │Twilio   │
+│API   │      │API      │            │WhatsApp │
+└──────┘      └─────────┘            └─────────┘
+   ▼               ▼                      ▼
+┌──────┐      ┌─────────┐            ┌─────────┐
+│Vrbo  │      │Expedia  │            │Stripe   │
+│API   │      │EQC      │            │PayPal   │
+└──────┘      └─────────┘            └─────────┘</pre>
+        </div>
+
+        <div class="doc-section">
+            <h3><span class="num">2</span> Schéma PostgreSQL multi-tenant</h3>
+            <pre>-- Tables principales (Prisma)
+tenants ──┬── users ──┬── properties ──┬── property_translations
+          │           │                ├── property_photos
+          │           │                ├── property_amenities
+          │           │                ├── channel_listings
+          │           │                ├── calendar_days
+          │           │                ├── bookings ──┬── conversations ── messages
+          │           │                │              └── tasks
+          │           │                ├── pricing_rules
+          │           │                ├── promotions
+          │           │                ├── housekeeping_configs
+          │           │                ├── checklists (items JSONB)
+          │           │                └── iot_locks
+          │           ├── payouts
+          │           ├── message_templates
+          │           └── audit_logs
+          └── webhooks ──┬── ota_events (idempotency)
+                         └── dead_letter_queue
+
+-- Index critiques
+CREATE INDEX idx_cal_dates ON calendar_days(property_id, date);
+CREATE INDEX idx_bookings_dates ON bookings(check_in, check_out);
+CREATE INDEX idx_bookings_status ON bookings(status);
+CREATE INDEX idx_tasks_assigned ON tasks(assigned_to, scheduled_at);
+CREATE UNIQUE INDEX idx_no_double_booking
+  ON bookings (property_id, daterange(check_in, check_out, '[]'));
+
+-- Partitionnement (scalabilité 10 000+ logements)
+PARTITION bookings BY HASH (tenant_id);  -- 8 partitions
+PARTITION calendar_days BY RANGE (date);  -- mensuel
+
+-- Contraintes de sécurité
+ALTER TABLE audit_logs ADD CONSTRAINT audit_append_only
+  CHECK (TRUE);  -- Trigger BEFORE UPDATE/DELETE → RAISE EXCEPTION</pre>
+        </div>
+
+        <div class="doc-section">
+            <h3><span class="num">3</span> API REST — endpoints principaux</h3>
+            <pre>// Auth
+POST   /auth/login              → JWT + refresh httpOnly cookie
+POST   /auth/oauth/google       → OAuth2 PKCE
+POST   /auth/mfa/verify         → TOTP obligatoire Admin+Conciergerie
+
+// Properties
+GET    /properties              → pagination curseur
+POST   /properties              → création + upload photos async
+PATCH  /properties/:id          → mise à jour
+GET    /properties/:id/channels → statut sync par OTA
+
+// Calendar
+GET    /calendar?property=&from=&to=
+POST   /calendar/block          → blocage dates
+POST   /calendar/sync           → force sync OTA
+
+// Bookings
+GET    /bookings?status=&property=
+POST   /bookings                → trigger full automation flow
+PATCH  /bookings/:id/status     → checked_in, checked_out, cancelled
+POST   /bookings/:id/cancel     → remboursement + déblocage
+
+// Pricing
+POST   /pricing/rules
+POST   /pricing/optimize        → appel IA
+GET    /pricing/forecast?from=&to=
+
+// Messaging
+GET    /messages/conversations
+POST   /messages/:id/reply
+POST   /messages/:id/ai-reply
+
+// Tasks (Housekeeping)
+GET    /housekeeping/tasks/today
+POST   /housekeeping/tasks/:id/assign
+PUT    /housekeeping/tasks/:id/checklist
+PUT    /housekeeping/tasks/:id/validate
+POST   /housekeeping/tasks/:id/issue
+
+// IoT Locks
+POST   /locks/:id/code          → générer code temporaire
+POST   /locks/:id/revoke        → révoquer code
+GET    /locks/:id/logs          → historique accès
+
+// Stats
+GET    /stats/revpar?from=&to=
+GET    /stats/adr
+GET    /stats/platform-mix
+GET    /stats/occupancy
+
+// Webhooks
+POST   /webhooks/airbnb         → HMAC signature verify
+POST   /webhooks/booking
+POST   /webhooks/expedia
+POST   /webhooks/vrbo
+POST   /webhooks/stripe         → signature verify + idempotency
+
+// Payouts
+GET    /payouts                 → relevés
+GET    /payouts/:id/pdf         → PDF signé</pre>
+        </div>
+
+        <div class="doc-section">
+            <h3><span class="num">4</span> Fiabilité synchro OTA (Module 7)</h3>
+            <p>Architecture à 5 couches garantissant un taux de succès ≥ 99.9% et une prévention totale du double booking.</p>
+            <pre>LAYER 1 — Webhooks entrants (push temps réel)
+├── Endpoint dédié par OTA, signature HMAC-SHA256
+├── Réponse 200 immédiate (< 2s) → traitement BullMQ
+├── Idempotence : event_id unique → Redis TTL 24h
+└── Log de chaque webhook reçu
+
+LAYER 2 — File BullMQ (asynchrone)
+├── Priorités : réservations > annulations > modifs > tarifs
+├── Retry exponentiel : 1s, 4s, 16s (3 tentatives)
+└── Dead Letter Queue + alerte admin si échec final
+
+LAYER 3 — Circuit Breaker (par OTA)
+├── CLOSED (normal) → OPEN (5 échecs) → HALF-OPEN (60s)
+└── Alerte Datadog à chaque bascule
+
+LAYER 4 — Polling de sécurité (filet)
+├── Toutes les 15 min : re-pull des calendriers OTA
+└── Correction automatique des désynchronisations
+
+LAYER 5 — Monitoring + Alertes
+├── Dashboard Datadog par plateforme
+├── Alerte si succès < 99% sur 5 min
+└── Rapport quotidien automatique
+
+DOUBLE BOOKING — Protection ultime
+├── Lock pessimiste PostgreSQL (SELECT FOR UPDATE)
+├── Contrainte UNIQUE base (property_id, daterange) EXCLUDE
+├── Vérification avant confirmation
+└── Si détecté : annulation la + récente + remboursement + email</pre>
+        </div>
+
+        <div class="doc-section">
+            <h3><span class="num">5</span> Flux réservation 100% automatisé (Module 5)</h3>
+            <pre>ÉTAPE 1 — Réception webhook OTA
+  ├── Vérification signature HMAC
+  ├── Idempotence check (event_id Redis)
+  ├── INSERT booking status=PENDING
+  └── Lock pessimiste sur dates
+
+ÉTAPE 2 — Blocage calendrier (< 30s)
+  └── Push sync vers toutes les OTA connectées
+
+ÉTAPE 3 — Paiement (résa directe uniquement)
+  ├── PaymentIntent Stripe + idempotency_key
+  ├── 3D Secure si requis
+  └── Retry J+1, J+2, J+3 si échec
+
+ÉTAPE 4 — Documents
+  ├── Contrat PDF (variables réservation injectées)
+  ├── Facture PDF
+  └── Dossier voyageur S3 (lien signé 7j)
+
+ÉTAPE 5 — Communications auto
+  ├── Email confirmation (i18n auto)
+  ├── SMS Twilio
+  ├── Push propriétaire + conciergerie
+  └── Mission ménage J-1 planifiée
+
+ÉTAPE 6 — J-1 check-in 10h
+  ├── Code serrure IoT généré (Nuki/August/Yale)
+  ├── Guide voyageur PDF
+  └── Code accès (email + SMS + WhatsApp)
+
+ÉTAPE 7 — Jour J check-in
+  ├── Code serrure activé à l'heure
+  └── Statut → CHECKED_IN
+
+ÉTAPE 8 — Check-out
+  ├── Code serrure désactivé auto
+  ├── Mission ménage déclenchée
+  └── Délai caution 72h démarre
+
+ÉTAPE 9 — J+1 post-séjour
+  ├── Demande avis
+  ├── Facture finale
+  └── Libération caution J+3
+
+EXCEPTIONS 100% AUTOMATIQUES
+├── Double booking → annulation + remboursement + email excuse
+├── Paiement échoué → retry 3x puis annulation
+├── API serrure down → code boîte à clés par SMS
+└── Webhook manqué → re-pull 15 min</pre>
+        </div>
+
+        <div class="doc-section">
+            <h3><span class="num">6</span> Stratégie de tests (Module 6)</h3>
+            <p>Objectif : 100% des tests critiques validés, 0 bug bloquant en production.</p>
+            <pre>TESTS UNITAIRES (Jest, couverture ≥ 85%)
+├── Calcul prix (saisonnier, week-end, promo, taxes)
+├── Détection double-booking (tous cas limites)
+├── Génération codes serrure (unicité, durée)
+├── Calcul cautions
+├── Règles escalade ménage
+└── Parsing webhooks OTA (cas nominaux + erreurs)
+
+TESTS INTÉGRATION (Jest + Testcontainers)
+├── Flux Stripe complet (cartes test)
+├── Sync calendrier multi-OTA
+├── Emails SendGrid sandbox
+├── SMS Twilio test
+├── IoT locks (mock Nuki)
+└── Webhooks signatures valides + invalides
+
+TESTS E2E (Playwright) — 15 scénarios critiques
+□ E2E-01 Réservation directe complète
+□ E2E-02 Résa Airbnb simulée
+□ E2E-03 Résa Booking simulée
+□ E2E-04 Double booking détecté + annulé auto
+□ E2E-05 Paiement échoué → retry → annulation
+□ E2E-06 Check-in autonome (code → porte)
+□ E2E-07 Check-out → ménage → caution
+□ E2E-08 Modification résa → re-sync
+□ E2E-09 Annulation → remboursement
+□ E2E-10 No-show → gestion auto
+□ E2E-11 Assignation ménage → exécution
+□ E2E-12 IA message → révision si confiance < 80%
+□ E2E-13 Admin MFA → accès dashboard
+□ E2E-14 Cleaner → missions du jour only
+□ E2E-15 Relevé propriétaire PDF
+
+TESTS PERF (k6)
+├── 100 users → p95 < 200ms
+├── 1000 users → p95 < 500ms, 0 erreur 5xx
+└── 500 webhooks/min → 0 perte
+
+TESTS SÉCURITÉ
+├── OWASP ZAP à chaque déploiement
+├── Snyk dépendances (0 critique)
+├── Pentest externe avant prod
+└── Rate limiter (5 tentatives max)</pre>
+        </div>
+
+        <div class="doc-section">
+            <h3><span class="num">7</span> Paiements PCI-DSS (Module 8)</h3>
+            <pre>CONFORMITÉ : PCI-DSS SAQ A (délégation totale Stripe)
+Aucune donnée carte ne transite par nos serveurs.
+
+FLUX PAIEMENT
+1. Client → Stripe Elements → tokenisation client
+2. Backend reçoit PaymentMethod ID (jamais PAN)
+3. PaymentIntent + idempotencyKey = reservation_uuid
+4. 3D Secure automatique
+5. Webhook payment_intent.succeeded → update booking
+
+CAUTION (empreinte)
+├── SetupIntent avant check-in
+├── Empreinte AUTORIZED (pas débitée)
+├── Libération auto J+3 post-checkout (cron)
+└── Capture partielle si litige (photos preuve)
+
+SÉCURITÉ WEBHOOKS
+└── stripe.webhooks.constructEvent(payload, sig, secret)
+    + idempotence Redis par event_id
+
+MONITORING
+├── Succès paiements (alerte < 99.5%)
+├── Alerte paiement > 5000€ échoué
+└── Réconciliation quotidienne Stripe ↔ DB</pre>
+        </div>
+
+        <div class="doc-section">
+            <h3><span class="num">8</span> Sauvegardes 3-2-1 (Module 9)</h3>
+            <pre>RÈGLE 3-2-1
+3 copies · 2 supports (RDS+S3) · 1 hors site
+
+POSTGRESQL (RDS Aurora)
+├── Auto backup rétention 35j + PITR
+├── Snapshot quotidien 3h du matin
+├── Snapshot hebdo (12 sem) / mensuel (12 mois) / annuel (7 ans)
+├── Réplication sync Multi-AZ (failover < 60s)
+└── Export cross-région toutes les 24h
+
+S3 (Photos/Docs)
+├── Versioning (90j conservés)
+├── Réplication cross-région automatique
+├── Lifecycle : photos > 1 an → Glacier
+└── Chiffrement SSE-KMS
+
+RESTAURATION TESTÉE (mensuel)
+□ Restaurer sur environnement isolé
+□ Vérifier intégrité (checksums + nb)
+□ Lancer suite tests sur données restaurées
+□ Mesurer RTO (objectif < 4h)
+└── Alerter si échec
+
+PRA / PCA
+├── Failover RDS Multi-AZ < 60s
+├── Mode dégradé si DB down
+├── RPO < 1h · RTO < 4h
+└── Post-mortem dans les 48h</pre>
+        </div>
+
+        <div class="doc-section">
+            <h3><span class="num">9</span> Conformité légale (Module 10)</h3>
+            <ul>
+                <li><strong>CGU/CGV versionnées</strong> — acceptation logguée avec timestamp</li>
+                <li><strong>Contrat location saisonnière</strong> — généré auto par juridiction (FR / Sénégal COCC)</li>
+                <li><strong>RGPD</strong> — bannière opt-in, registre traitements, droits 30j</li>
+                <li><strong>Droit à l'effacement</strong> — pseudonymisation auto + conservation 7 ans comptable</li>
+                <li><strong>Violation données</strong> — notification CNIL 72h documentée</li>
+                <li><strong>Fiscal FR</strong> — TVA selon régime (micro-BIC, réel, SCI), export 2042 C</li>
+                <li><strong>Fiscal Sénégal</strong> — TPT 1000 FCFA/nuit/pers, NINEA factures, agrément Tourisme</li>
+                <li><strong>Audit trail</strong> — table append-only (INSERT only)</li>
+            </ul>
+        </div>
+
+        <div class="doc-section">
+            <h3><span class="num">10</span> Performance mobile (Module 11)</h3>
+            <pre>OBJECTIFS CORE WEB VITALS (4G)
+LCP < 2.5s · FCP < 1.5s · INP < 200ms · CLS < 0.1
+Lighthouse mobile ≥ 90
+
+OPTIMISATIONS
+Images
+├── next/image WebP/AVIF auto
+├── Blurhash placeholder
+├── srcset responsive 375/750/1080
+└── Upload 10MB max → compression < 500KB
+
+JavaScript
+├── Code splitting App Router
+├── Tree shaking imports nommés
+├── Dynamic import charts/éditeur
+└── Bundle CI analyzer (< 500KB gz)
+
+CSS
+├── Tailwind purge prod (< 20KB)
+├── Critical CSS inline
+└── Pas de render-blocking
+
+Cache
+├── Redis TTL 5 min (API données peu changeantes)
+├── Assets 1 an (hash nom)
+├── CDN CloudFront edge (TTL 60s)
+└── Service Worker Workbox stale-while-revalidate
+
+PWA
+├── Manifest + icônes maskable
+├── Offline missions ménage + résa actives
+├── Background sync retour réseau
+└── Push notifications natives</pre>
+        </div>
+
+        <div class="doc-section">
+            <h3><span class="num">11</span> Scalabilité &amp; cloud</h3>
+            <pre>ENVIRONNEMENT    | AWS                  | Azure
+─────────────────┼──────────────────────┼──────────────────
+Front PWA        | CloudFront + S3      | Static Web Apps
+API Gateway      | ECS Fargate / EKS    | AKS / Container
+Base PostgreSQL  | RDS Aurora Multi-AZ  | Azure DB PG
+Cache / Queue    | ElastiCache + SQS    | Cache + SB
+Storage          | S3 + CloudFront      | Blob + CDN
+Auth             | Cognito              | Entra ID
+Push             | SNS / Pinpoint       | Notification Hub
+Monitoring       | CloudWatch + Datadog | App Insights
+CI/CD            | GitHub Actions       | GitHub Actions
+
+SCALABILITÉ (logements)
+───────────────┬──────┬───────┬────────┬─────────
+Instances API  │  1   │  2    │   6    │  20+
+Répl. Postgres │  0   │  1    │   2    │   5
+Partition book.│ non  │ non   │  oui   │  oui
+Partition cal. │ non  │ oui   │  oui   │  oui
+CDN + Redis    │ oui  │ oui   │  oui   │  oui
+Workers BullMQ │  1   │  2    │   8    │  30
+
+ROLES & PERMISSIONS (RBAC)
+super_admin  → tous tenants · audit · facturation
+concierge    → son tenant · logements · résa · tâches · messages
+owner        → ses logements · dashboard · relevés
+cleaner      → tâches assignées · photos · rapports
+technician   → interventions · rapports · photos
+
+MOTEUR IA
+├── GPT-4o / Claude Sonnet (configurable par tenant)
+├── Contexte injecté : résa + logement + historique
+├── Score confiance ≥ 80% → envoi auto
+└── < 80% → file révision humaine + notification</pre>
+        </div>
+
+        <div class="doc-section">
+            <h3><span class="num">✓</span> Checklist Go-Live (8 critères critiques)</h3>
+            <ul class="checklist">
+                <li>15 scénarios E2E Playwright : 100% pass</li>
+                <li>Jest couverture ≥ 85%, 0 test échoué</li>
+                <li>Snyk : 0 vulnérabilité critique</li>
+                <li>OWASP ZAP : 0 vulnérabilité haute</li>
+                <li>Pentest externe : critiques corrigées</li>
+                <li>0 bug P0 ou P1 ouvert</li>
+                <li>Sync Airbnb/Booking/Vrbo : &lt; 30s testée</li>
+                <li>Double-booking : détecté + annulé auto</li>
+                <li>Circuit breaker : bascule + reprise OK</li>
+                <li>Paiement Visa/MC test mode : OK</li>
+                <li>3D Secure : flux correct</li>
+                <li>Webhook Stripe : signature + idempotence</li>
+                <li>PCI-DSS SAQ A : attestation signée</li>
+                <li>Restauration DB testée sur env isolé</li>
+                <li>RTO mesuré &lt; 4h</li>
+                <li>CGU/CGV relues juriste</li>
+                <li>Contrat location template validé</li>
+                <li>Bannière cookies RGPD opt-in</li>
+                <li>Droit effacement testé</li>
+                <li>TVA/TPT calcul validé comptable</li>
+                <li>Lighthouse mobile score ≥ 90</li>
+                <li>LCP &lt; 2.5s sur réseau 4G simulé</li>
+                <li>Service Worker offline fonctionnel</li>
+                <li>Réservation directe 0 action manuelle</li>
+                <li>Code serrure généré + envoyé auto</li>
+                <li>Caution libérée auto J+3</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ VIEW : PROFILE ═══ -->
+<div class="view" id="view-profile">
+    <div class="container-narrow">
+        <div class="dash-header">
+            <h1>Profil</h1>
+            <p>Préférences · Sécurité · Déconnexion</p>
+        </div>
+        <div class="panel">
+            <div class="panel-title"><span>Utilisateur</span><span class="badge success">Vérifié</span></div>
+            <div class="modal-field"><div class="mf-label">Nom</div><div class="mf-value" id="profile-name">Malika K.</div></div>
+            <div class="modal-field"><div class="mf-label">Email</div><div class="mf-value" id="profile-email">demo@lgc.fr</div></div>
+            <div class="modal-field"><div class="mf-label">Rôle actif</div><div class="mf-value" id="profile-role">Conciergerie</div></div>
+            <div class="modal-field"><div class="mf-label">MFA</div><div class="mf-value"><span class="badge success">TOTP activé</span></div></div>
+            <div class="modal-field"><div class="mf-label">Tenant</div><div class="mf-value">LGC — Les Grands Concierges (tenant_lgc)</div></div>
+            <div style="display:flex;gap:0.5rem;margin-top:1rem;flex-wrap:wrap;">
+                <button class="btn btn-ghost btn-sm" onclick="switchView('architecture')">📖 Documentation technique</button>
+                <button class="btn btn-danger btn-sm" onclick="logout()">Déconnexion</button>
+            </div>
+        </div>
+        <div class="panel">
+            <div class="panel-title"><span>Sécurité &amp; conformité</span></div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:0.5rem;font-size:0.78rem;">
+                <div style="padding:0.7rem;background:var(--panel-2);border-radius:8px;">
+                    <div style="color:var(--metal-hi);font-weight:700;margin-bottom:0.2rem;">🔐 Chiffrement</div>
+                    <div style="color:var(--ink-dim);">AES-256 au repos · TLS 1.3 en transit</div>
+                </div>
+                <div style="padding:0.7rem;background:var(--panel-2);border-radius:8px;">
+                    <div style="color:var(--metal-hi);font-weight:700;margin-bottom:0.2rem;">📝 Audit trail</div>
+                    <div style="color:var(--ink-dim);">Table immuable INSERT-only</div>
+                </div>
+                <div style="padding:0.7rem;background:var(--panel-2);border-radius:8px;">
+                    <div style="color:var(--metal-hi);font-weight:700;margin-bottom:0.2rem;">🇪🇺 RGPD</div>
+                    <div style="color:var(--ink-dim);">Droit accès · effacement · portabilité</div>
+                </div>
+                <div style="padding:0.7rem;background:var(--panel-2);border-radius:8px;">
+                    <div style="color:var(--metal-hi);font-weight:700;margin-bottom:0.2rem;">💳 PCI-DSS</div>
+                    <div style="color:var(--ink-dim);">SAQ A · délégation Stripe</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ MODAL ═══ -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+    <div class="modal" id="modal-content" onclick="event.stopPropagation()"></div>
+</div>
+
+<!-- ═══ TOAST ═══ -->
+<div class="toast" id="toast">
+    <span id="toast-icon">✓</span>
+    <span id="toast-text">Message</span>
+</div>
+
+<!-- ═══ PWA BANNER ═══ -->
+<div class="pwa-banner" id="pwa-banner">
+    <div class="pwa-banner-inner">
+        <div class="pb-icon">🗝️</div>
+        <div class="pb-text">
+            <div class="pb-title">Installer LGC Suite</div>
+            <div class="pb-sub">Accès direct depuis votre écran d'accueil · mode hors-ligne</div>
+        </div>
+        <button class="btn btn-metal btn-sm" onclick="installPWA()">Installer</button>
+        <button class="btn btn-ghost btn-sm" onclick="dismissPWA()">✕</button>
+    </div>
+</div>
+
+<!-- ═══ BOTTOM NAV (mobile) ═══ -->
+<nav class="bottom-nav">
+    <button class="bn-item active" data-view="dashboard"><div class="bn-icon">⚡</div><div>Activité</div></button>
+    <button class="bn-item" data-view="calendar"><div class="bn-icon">📅</div><div>Calendrier</div></button>
+    <button class="bn-item" data-view="bookings"><div class="bn-icon">📋</div><div>Résa</div></button>
+    <button class="bn-item" data-view="messages"><div class="bn-icon">💬</div><div>Messages</div></button>
+    <button class="bn-item" data-view="tasks"><div class="bn-icon">🧹</div><div>Tâches</div></button>
+</nav>
+
+<script>
+// ══════════════════════════════════════════════════════════════════
+// ÉTAT GLOBAL
+// ══════════════════════════════════════════════════════════════════
+const MONTHS_FR = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+const MONTHS_SHORT = ['Jan','Fév','Mar','Avr','Mai','Juin','Juil','Août','Sep','Oct','Nov','Déc'];
+const ROLE_LABELS = {
+    concierge: 'Conciergerie', owner: 'Propriétaire',
+    cleaner: 'Agent ménage', technician: 'Technicien',
+    admin: 'Super Admin'
+};
+const CHANNEL_ICONS = { airbnb: 'A', booking: 'B', expedia: 'E', vrbo: 'V', direct: 'D' };
+
+const STATE = {
+    view: 'dashboard',
+    role: 'concierge',
+    currentMonth: new Date(2026, 9, 1), // Octobre 2026
+    currentPropertyFilter: 'all',
+    bookingsFilter: 'all',
+    taskFilter: 'all',
+    pwaDeferred: null,
+    data: {
+        properties: [
+            { id:'p1', name:'T2 République', city:'Montreuil', type:'T2', bedrooms:1, guests:4, basePrice:95, owner:'Malika K.', channels:['airbnb','booking'], occupancy:78, revenue:1847, status:'active', lock: { type:'Nuki', status:'connected', battery:92 } },
+            { id:'p2', name:'Studio Croix-de-Chavaux', city:'Montreuil', type:'Studio', bedrooms:1, guests:2, basePrice:68, owner:'Thomas M.', channels:['airbnb'], occupancy:65, revenue:1220, status:'active', lock: { type:'August', status:'connected', battery:78 } },
+            { id:'p3', name:'T3 Mairie de Montreuil', city:'Montreuil', type:'T3', bedrooms:2, guests:5, basePrice:135, owner:'Jean-B. B.', channels:['airbnb','booking','vrbo'], occupancy:82, revenue:2650, status:'active', lock: { type:'Yale', status:'connected', battery:45 } },
+            { id:'p4', name:'Loft Vincennes', city:'Vincennes', type:'Loft', bedrooms:2, guests:4, basePrice:185, owner:'Malika K.', channels:['airbnb','expedia'], occupancy:71, revenue:3105, status:'active', lock: { type:'Nuki', status:'connected', battery:88 } },
+            { id:'p5', name:'T1 Bagnolet', city:'Bagnolet', type:'T1', bedrooms:1, guests:2, basePrice:72, owner:'Sophie L.', channels:['booking'], occupancy:58, revenue:890, status:'active', lock: { type:'Igloohome', status:'connected', battery:67 } }
+        ],
+        bookings: [
+            { id:'b1', propertyId:'p1', guest:'Émilie R.', start:new Date(2026,9,3), end:new Date(2026,9,8), nights:5, revenue:425, gross:520, status:'confirmed', channel:'airbnb', guests:2, lockCode:'4821', lockRevealed:false, checkinStatus:'Code envoyé', housekeepingStatus:'Assigné', housekeepingProgress:'8/20', messagePreview:'Bonjour, à quelle heure pouvons-nous arriver samedi ?', messageUnread:2 },
+            { id:'b2', propertyId:'p1', guest:'Marc D.', start:new Date(2026,9,12), end:new Date(2026,9,16), nights:4, revenue:380, gross:465, status:'checked_out', channel:'booking', guests:3, lockCode:'1102', lockRevealed:false, checkinStatus:'Clés récupérées', housekeepingStatus:'Validé', housekeepingProgress:'20/20', messagePreview:'Merci pour votre accueil, tout est parfait !', messageUnread:0 },
+            { id:'b3', propertyId:'p1', guest:'Sophie L.', start:new Date(2026,9,20), end:new Date(2026,9,27), nights:7, revenue:720, gross:880, status:'confirmed', channel:'airbnb', guests:2, lockCode:'6419', lockRevealed:false, checkinStatus:'En attente', housekeepingStatus:'Non planifié', housekeepingProgress:'0/20', messagePreview:'Super, à bientôt !', messageUnread:0 },
+            { id:'b4', propertyId:'p2', guest:'Julien P.', start:new Date(2026,9,15), end:new Date(2026,9,19), nights:4, revenue:280, gross:340, status:'pending', channel:'airbnb', guests:1, lockCode:'7734', lockRevealed:false, checkinStatus:'En attente', housekeepingStatus:'Non planifié', housekeepingProgress:'0/18', messagePreview:'Puis-je arriver plus tôt ?', messageUnread:1 },
+            { id:'b5', propertyId:'p3', guest:'Camille B.', start:new Date(2026,9,10), end:new Date(2026,9,15), nights:5, revenue:690, gross:840, status:'checked_in', channel:'vrbo', guests:4, lockCode:'0921', lockRevealed:false, checkinStatus:'Arrivé', housekeepingStatus:'Validé', housekeepingProgress:'22/22', messagePreview:'Merci, on est bien installés !', messageUnread:0 },
+            { id:'b6', propertyId:'p4', guest:'Antoine F.', start:new Date(2026,9,22), end:new Date(2026,9,28), nights:6, revenue:1150, gross:1400, status:'confirmed', channel:'expedia', guests:2, lockCode:'3387', lockRevealed:false, checkinStatus:'En attente', housekeepingStatus:'Assigné', housekeepingProgress:'4/22', messagePreview:'Est-ce que le parking est inclus ?', messageUnread:1 },
+            { id:'b7', propertyId:'p1', guest:'Nadia K.', start:new Date(2026,9,29), end:new Date(2026,10,3), nights:4, revenue:400, gross:490, status:'confirmed', channel:'airbnb', guests:3, lockCode:'5518', lockRevealed:false, checkinStatus:'En attente', housekeepingStatus:'Non planifié', housekeepingProgress:'0/20', messagePreview:'', messageUnread:0 },
+            { id:'b8', propertyId:'p5', guest:'Lucas M.', start:new Date(2026,9,5), end:new Date(2026,9,9), nights:4, revenue:300, gross:365, status:'cancelled', channel:'booking', guests:2, lockCode:'0000', lockRevealed:false, checkinStatus:'Annulé', housekeepingStatus:'Annulé', housekeepingProgress:'0/0', messagePreview:'', messageUnread:0 }
+        ],
+        revenues: [
+            { month:'Avr', value:6180 }, { month:'Mai', value:7250 },
+            { month:'Juin', value:8420 }, { month:'Juil', value:9860 },
+            { month:'Août', value:8940 }, { month:'Oct', value:9712, current:true }
+        ],
+        conversations: [
+            { id:'c1', guest:'Émilie R.', initials:'ER', channel:'airbnb', lastMessage:'Bonjour, à quelle heure pouvons-nous arriver samedi ?', time:'il y a 12 min', unread:2 },
+            { id:'c2', guest:'Camille B.', initials:'CB', channel:'vrbo', lastMessage:'Merci pour votre accueil, tout est parfait !', time:'il y a 2h', unread:0 },
+            { id:'c3', guest:'Antoine F.', initials:'AF', channel:'expedia', lastMessage:'Est-ce que le parking est inclus ?', time:'hier', unread:1 },
+            { id:'c4', guest:'Marc D.', initials:'MD', channel:'booking', lastMessage:'Nous avons bien récupéré les clés, merci.', time:'il y a 3 jours', unread:0 }
+        ],
+        tasks: [
+            { id:'t1', propertyId:'p1', type:'cleaning', title:'Ménage après départ Émilie R.', assigned:'Fatima B.', scheduled:'08/10 à 11h', status:'done', priority:'normal' },
+            { id:'t2', propertyId:'p3', type:'cleaning', title:'Ménage avant arrivée Camille B.', assigned:'Aïcha M.', scheduled:'10/10 à 14h', status:'done', priority:'high' },
+            { id:'t3', propertyId:'p2', type:'maintenance', title:'Remplacer ampoule salle de bain', assigned:'Karim T.', scheduled:'15/10 à 10h', status:'planned', priority:'normal' },
+            { id:'t4', propertyId:'p4', type:'inspection', title:'Inspection trimestrielle', assigned:'Malika K.', scheduled:'20/10 à 15h', status:'planned', priority:'normal' },
+            { id:'t5', propertyId:'p1', type:'cleaning', title:'Ménage avant arrivée Sophie L.', assigned:'Fatima B.', scheduled:'20/10 à 10h', status:'planned', priority:'high' },
+            { id:'t6', propertyId:'p3', type:'maintenance', title:'Révision chaudière annuelle', assigned:'ChauffagePro 93', scheduled:'25/10 à 09h', status:'planned', priority:'normal' },
+            { id:'t7', propertyId:'p1', type:'cleaning', title:'Ménage avant arrivée Nadia K.', assigned:'—', scheduled:'29/10 à 10h', status:'planned', priority:'urgent' }
+        ],
+        pricingRules: [
+            { label:'Été (juil-août)', type:'Saison', multiplier:1.35, period:'01/07 → 31/08', active:true },
+            { label:'Week-end', type:'Jours', multiplier:1.20, period:'Ven-Sam', active:true },
+            { label:'Longue durée 7+ nuits', type:'Durée', multiplier:0.90, period:'≥ 7 nuits', active:true },
+            { label:'Salon du Livre Montreuil', type:'Événement', multiplier:1.50, period:'28/11 → 03/12', active:true },
+            { label:'Last minute < 3 jours', type:'Dernière minute', multiplier:0.85, period:'J-3', active:false }
+        ],
+        promos: [
+            { code:'BIENVENUE10', label:'10% première réservation', discount:10, valid:'Permanent', auto:true },
+            { code:'LONGSEJOUR15', label:'15% à partir de 7 nuits', discount:15, valid:'Permanent', auto:true },
+            { code:'PRINTEMPS20', label:'20% séjours printemps', discount:20, valid:'01/03 → 31/05', auto:false }
+        ],
+        activities: [
+            { icon:'📥', text:'Nouvelle réservation Airbnb — Émilie R. (T2 République)', time:'il y a 12 min' },
+            { icon:'💬', text:'Message reçu de Camille B. — VRBO', time:'il y a 2h' },
+            { icon:'✅', text:'Ménage terminé — Fatima B. (T2 République)', time:'il y a 4h' },
+            { icon:'💶', text:'Virement envoyé à Malika K. — Oct 2026', time:'hier' },
+            { icon:'🔄', text:'Calendrier synchronisé avec Booking.com', time:'hier' }
+        ],
+        housekeepingChecklist: [
+            { room:'🛋️ Salon', items:[{name:'Aspirateur complet', done:true},{name:'Nettoyage surfaces', done:true},{name:'Coussins bien placés', done:false},{name:'TV + télécommande', done:false}] },
+            { room:'🛏️ Chambre', items:[{name:'Draps propres', done:false},{name:'Oreillers ajustés', done:false},{name:'Poussière étagères', done:false}] },
+            { room:'🍳 Cuisine', items:[{name:'Vaisselle rangée', done:false},{name:'Plan de travail', done:false},{name:'Évier + robinetterie', done:false},{name:'Poubelles vidées', done:false}] },
+            { room:'🚿 Salle de bain', items:[{name:'Serviettes propres', done:false},{name:'Douche + paroi', done:false},{name:'WC désinfecté', done:false},{name:'Miroir sans trace', done:false}] }
+        ]
+    }
+};
+
+// ══════════════════════════════════════════════════════════════════
+// HELPERS
+// ══════════════════════════════════════════════════════════════════
+function fmtEuro(n) { return new Intl.NumberFormat('fr-FR', { style:'currency', currency:'EUR', maximumFractionDigits:0 }).format(n); }
+function esc(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' })[c]); }
+function propById(id) { return STATE.data.properties.find(p => p.id === id) || { name:'?', city:'?' }; }
+function fmtDate(d) { return d.getDate().toString().padStart(2,'0') + '/' + (d.getMonth()+1).toString().padStart(2,'0') + '/' + d.getFullYear(); }
+
+// ══════════════════════════════════════════════════════════════════
+// NAVIGATION
+// ══════════════════════════════════════════════════════════════════
+function switchView(view) {
+    STATE.view = view;
+    document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.id === 'view-' + view));
+    document.querySelectorAll('.topbar-tab').forEach(t => t.classList.toggle('active', t.dataset.view === view));
+    document.querySelectorAll('.bn-item').forEach(b => b.classList.toggle('active', b.dataset.view === view));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    const renderers = {
+        dashboard: renderDashboard, properties: renderProperties, calendar: renderCalendar,
+        bookings: renderBookings, pricing: renderPricing, messages: renderMessages,
+        tasks: renderTasks, stats: renderStats, profile: renderProfile
+    };
+    if (renderers[view]) renderers[view]();
+}
+document.querySelectorAll('.topbar-tab').forEach(t => t.addEventListener('click', () => switchView(t.dataset.view)));
+document.querySelectorAll('.bn-item').forEach(b => b.addEventListener('click', () => switchView(b.dataset.view)));
+
+// ══════════════════════════════════════════════════════════════════
+// TOAST
+// ══════════════════════════════════════════════════════════════════
+let toastTimer = null;
+function showToast(msg, type='success') {
+    const t = document.getElementById('toast');
+    const i = document.getElementById('toast-icon');
+    const txt = document.getElementById('toast-text');
+    t.classList.remove('visible','success','error','warn');
+    void t.offsetWidth;
+    i.textContent = type === 'success' ? '✓' : type === 'error' ? '✕' : type === 'warn' ? '⚠' : 'ℹ';
+    txt.textContent = msg;
+    if (type !== 'info') t.classList.add(type);
+    requestAnimationFrame(() => t.classList.add('visible'));
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('visible'), 2800);
+}
+
+// ══════════════════════════════════════════════════════════════════
+// LOGIN
+// ══════════════════════════════════════════════════════════════════
+function doLogin() {
+    const email = document.getElementById('login-email').value.trim() || 'demo@lgc.fr';
+    document.getElementById('profile-email').textContent = email;
+    document.getElementById('login-screen').classList.add('hidden');
+    document.getElementById('topbar').style.display = 'block';
+    showToast('Bienvenue sur LGC Suite', 'success');
+    switchView('dashboard');
+}
+function logout() {
+    document.getElementById('login-screen').classList.remove('hidden');
+    document.getElementById('topbar').style.display = 'none';
+    switchView('landing');
+    showToast('Déconnecté', 'warn');
+}
+
+// ══════════════════════════════════════════════════════════════════
+// ROLE SWITCHER
+// ══════════════════════════════════════════════════════════════════
+document.querySelectorAll('#role-switcher button').forEach(b => {
+    b.addEventListener('click', () => {
+        document.querySelectorAll('#role-switcher button').forEach(x => x.classList.remove('active'));
+        b.classList.add('active');
+        STATE.role = b.dataset.role;
+        document.getElementById('topbar-role').textContent = ROLE_LABELS[STATE.role];
+        document.getElementById('profile-role').textContent = ROLE_LABELS[STATE.role];
+        const avatars = { concierge:'MK', owner:'MK', cleaner:'FB', technician:'KT', admin:'SA' };
+        const names = { concierge:'Malika K.', owner:'Malika K.', cleaner:'Fatima B.', technician:'Karim T.', admin:'Super Admin' };
+        document.getElementById('topbar-avatar').textContent = avatars[STATE.role];
+        document.getElementById('topbar-name').textContent = names[STATE.role];
+        document.getElementById('dash-greeting').textContent = 'Bonjour ' + names[STATE.role].split(' ')[0] + ' 👋';
+        renderDashboard();
+        showToast('Rôle : ' + ROLE_LABELS[STATE.role], 'info');
+    });
+});
+
+// ══════════════════════════════════════════════════════════════════
+// DASHBOARD (Module 3 - 8 tuiles)
+// ══════════════════════════════════════════════════════════════════
+function renderDashboard() {
+    const d = STATE.data;
+    const role = STATE.role;
+
+    // Métriques adaptées au rôle
+    let metrics = [];
+    if (role === 'cleaner') {
+        const myTasks = d.tasks.filter(t => t.type === 'cleaning');
+        metrics = [
+            { lbl:'Tâches assignées', val:myTasks.length, trend:{ text:myTasks.filter(t=>t.status==='planned').length+' à venir', cls:'up' } },
+            { lbl:'Terminées ce mois', val:myTasks.filter(t=>t.status==='done').length, trend:{ text:'objectif 40', cls:'neutral' } },
+            { lbl:'Note qualité', val:'4.8 ★', trend:{ text:'excellent', cls:'up' } }
+        ];
+    } else if (role === 'technician') {
+        const myTasks = d.tasks.filter(t => t.type === 'maintenance');
+        metrics = [
+            { lbl:'Interventions planifiées', val:myTasks.length, trend:{ text:'cette semaine', cls:'neutral' } },
+            { lbl:'Délai moyen', val:'3.2h', trend:{ text:'objectif < 4h', cls:'up' } },
+            { lbl:'Tickets ouverts', val:2, trend:{ text:'priorité normale', cls:'neutral' } }
+        ];
+    } else if (role === 'owner') {
+        metrics = [
+            { lbl:'Mes logements', val:2, trend:{ text:'Montreuil + Vincennes', cls:'neutral' } },
+            { lbl:'Revenus du mois', val:fmtEuro(4952), trend:{ text:'+18% vs sept.', cls:'up' } },
+            { lbl:'Taux occupation', val:'74%', trend:{ text:'+6 points', cls:'up' } },
+            { lbl:'Prochain virement', val:'01/11', trend:{ text:'≈ 4 950 €', cls:'neutral' } }
+        ];
+    } else if (role === 'admin') {
+        metrics = [
+            { lbl:'Tenants actifs', val:47, trend:{ text:'+3 ce mois', cls:'up' } },
+            { lbl:'Logements gérés', val:1284, trend:{ text:'total plateforme', cls:'neutral' } },
+            { lbl:'MRR', val:fmtEuro(84300), trend:{ text:'+12%', cls:'up' } },
+            { lbl:'Uptime API', val:'99.97%', trend:{ text:'30 jours', cls:'up' } }
+        ];
+    } else {
+        metrics = [
+            { lbl:'Logements', val:d.properties.length, trend:{ text:'tous actifs', cls:'up' } },
+            { lbl:'Revenus du mois', val:fmtEuro(d.revenues[5].value), trend:{ text:'+8.6% vs sept.', cls:'up' } },
+            { lbl:'Taux occupation', val:'72%', trend:{ text:'+5 points', cls:'up' } },
+            { lbl:'Réservations à venir', val:d.bookings.filter(b => b.start > new Date(2026,9,28)).length, trend:{ text:'30 jours', cls:'neutral' } },
+            { lbl:'En cours', val:d.bookings.filter(b => b.status === 'checked_in').length, trend:{ text:'check-in', cls:'neutral' } },
+            { lbl:'Taux remplissage', val:'78%', trend:{ text:'sur 30 jours', cls:'up' } }
+        ];
+    }
+    document.getElementById('metrics-grid').innerHTML = metrics.map(m =>
+        '<div class="metric-card' + (m.trend && m.trend.cls === 'up' ? ' highlight' : '') + '">' +
+            '<div class="m-lbl">' + esc(m.lbl) + '</div>' +
+            '<div class="m-val">' + esc(m.val) + '</div>' +
+            (m.trend ? '<div class="m-trend ' + m.trend.cls + '">' + esc(m.trend.text) + '</div>' : '') +
+        '</div>'
+    ).join('');
+
+    // 8 tuiles (Module 3)
+    const today = new Date(2026,9,29);
+    const departures = d.bookings.filter(b => b.end.toDateString() === today.toDateString() && b.status !== 'cancelled').length;
+    const arrivals = d.bookings.filter(b => b.start.toDateString() === today.toDateString() && b.status !== 'cancelled').length;
+    const tasksToday = d.tasks.filter(t => t.status === 'planned').length;
+    const bookingsToRegister = d.bookings.filter(b => b.status === 'pending').length;
+    const tasksToAssign = d.tasks.filter(t => t.assigned === '—').length;
+    const unreadMsgs = d.conversations.reduce((sum, c) => sum + c.unread, 0);
+    const additionalTasks = 2;
+    const cautions = d.bookings.filter(b => b.status === 'checked_in' || b.status === 'checked_out').length;
+
+    const tiles = [
+        { icon:'🚪', title:'Départs / Arrivées', count:departures + ' / ' + arrivals, sub:departures + ' départs · ' + arrivals + ' arrivées', alert:false, view:'bookings' },
+        { icon:'🧹', title:'Missions du jour', count:tasksToday, sub:tasksToday + ' non validées', alert:tasksToday > 0, view:'tasks' },
+        { icon:'📋', title:'Réservations', count:bookingsToRegister, sub:bookingsToRegister + ' à enregistrer', alert:bookingsToRegister > 0, view:'bookings' },
+        { icon:'👤', title:'À attribuer', count:tasksToAssign, sub:tasksToAssign + ' non attribuées', alert:tasksToAssign > 0, view:'tasks' },
+        { icon:'💬', title:'Messages', count:unreadMsgs, sub:unreadMsgs + ' non lus', alert:unreadMsgs > 0, view:'messages' },
+        { icon:'🔧', title:'Missions additionnelles', count:additionalTasks, sub:'Maintenance · Urgence', alert:false, view:'tasks' },
+        { icon:'💳', title:'Cautions', count:cautions, sub:cautions + ' en cours', alert:false, view:'bookings' },
+        { icon:'📝', title:'Actions / Notes', count:2, sub:'🔴 1 urgent · 🟡 1 normal', alert:true, view:'tasks' }
+    ];
+
+    document.getElementById('tiles-grid').innerHTML = tiles.map(t =>
+        '<div class="tile' + (t.alert ? ' alert' : '') + '" onclick="switchView(\'' + t.view + '\')">' +
+            '<div class="tile-header"><div class="tile-icon">' + t.icon + '</div><div class="tile-title">' + esc(t.title) + '</div></div>' +
+            '<div class="tile-count">' + t.count + '</div>' +
+            '<div class="tile-sub">' + esc(t.sub) + '</div>' +
+        '</div>'
+    ).join('');
+
+    // Revenus
+    const max = Math.max(...d.revenues.map(r => r.value));
+    document.getElementById('rev-badge').textContent = d.revenues.length + ' mois';
+    document.getElementById('rev-bars').innerHTML = d.revenues.map(r =>
+        '<div class="bar' + (r.current ? ' current' : '') + '" style="height:' + (r.value/max*100) + '%">' +
+            '<div class="bar-val">' + fmtEuro(r.value) + '</div>' +
+        '</div>'
+    ).join('');
+    document.getElementById('rev-labels').innerHTML = d.revenues.map(r =>
+        '<span' + (r.current ? ' class="current"' : '') + '>' + r.month + '</span>'
+    ).join('');
+
+    // Prochaines réservations
+    const upcoming = d.bookings.filter(b => b.end >= new Date() && b.status !== 'cancelled')
+        .sort((a,b) => a.start - b.start).slice(0, 4);
+    document.getElementById('next-bookings-count').textContent = upcoming.length + ' à venir';
+    document.getElementById('next-bookings-list').innerHTML = upcoming.map(b => bookingRow(b)).join('') ||
+        '<div class="empty-state"><div class="es-icon">📅</div>Aucune réservation à venir</div>';
+
+    // Feed
+    document.getElementById('activity-feed').innerHTML = d.activities.map(a =>
+        '<div style="display:flex;gap:0.7rem;padding:0.65rem 0;border-bottom:1px solid var(--border);align-items:flex-start;">' +
+            '<div style="font-size:1.1rem;flex-shrink:0;">' + a.icon + '</div>' +
+            '<div style="flex:1;">' +
+                '<div style="font-size:0.82rem;">' + esc(a.text) + '</div>' +
+                '<div style="font-size:0.68rem;color:var(--ink-faint);margin-top:0.15rem;">' + esc(a.time) + '</div>' +
+            '</div>' +
+        '</div>'
+    ).join('');
+}
+
+function bookingRow(b) {
+    const p = propById(b.propertyId);
+    const day = b.start.getDate().toString().padStart(2,'0');
+    const month = MONTHS_SHORT[b.start.getMonth()].toUpperCase();
+    return '<div class="list-item" onclick="openBooking(\'' + b.id + '\')" style="cursor:pointer;">' +
+        '<div class="li-date"><div class="li-day">' + day + '</div><div class="li-month">' + month + '</div></div>' +
+        '<div class="li-content">' +
+            '<div class="li-title">' + esc(b.guest) + ' <span class="badge soft" style="font-size:0.58rem;">' + CHANNEL_ICONS[b.channel] + ' ' + b.channel + '</span></div>' +
+            '<div class="li-sub">' + esc(p.name) + ' · ' + b.nights + ' nuits · ' + b.guests + ' pers.</div>' +
+        '</div>' +
+        '<div class="li-right">' +
+            '<div class="li-amount">+' + fmtEuro(b.revenue) + '</div>' +
+            '<span class="li-status ' + b.status + '">' + b.status.replace('_',' ') + '</span>' +
+        '</div>' +
+    '</div>';
+}
+
+// ─── MODAL RÉSERVATION (Module 2 - 4 quadrants) ────────────────
+function openBooking(id) {
+    const b = STATE.data.bookings.find(x => x.id === id);
+    if (!b) return;
+    const p = propById(b.propertyId);
+
+    const housekeepingSteps = b.housekeepingProgress.split('/');
+    const hkPct = housekeepingSteps[1] !== '0' ? Math.round((parseInt(housekeepingSteps[0]) / parseInt(housekeepingSteps[1])) * 100) : 0;
+    const codeMasked = !b.lockRevealed;
+
+    document.getElementById('modal-content').innerHTML =
+        '<div class="modal-header">' +
+            '<div><h3>' + esc(b.guest) + '</h3><div style="font-size:0.75rem;color:var(--ink-dim);margin-top:0.2rem;">' + esc(p.name) + ' · ' + fmtDate(b.start) + ' → ' + fmtDate(b.end) + '</div></div>' +
+            '<button class="close-btn" onclick="closeModal()">✕</button>' +
+        '</div>' +
+
+        // 4 QUADRANTS
+        '<div class="quadrants-grid">' +
+
+            // Quadrant 1 : Voyageur
+            '<div class="quadrant">' +
+                '<div class="quadrant-header"><div class="q-icon">👤</div><div class="q-title">Voyageur</div></div>' +
+                '<div class="quadrant-body">' +
+                    '<div style="display:flex;gap:0.7rem;align-items:center;margin-bottom:0.6rem;">' +
+                        '<div class="q-avatar">' + b.guest.split(' ').map(w=>w[0]).join('') + '</div>' +
+                        '<div><div style="font-weight:700;font-size:0.92rem;">' + esc(b.guest) + '</div>' +
+                        '<div style="font-size:0.68rem;color:var(--ink-dim);">' + b.guests + ' voyageurs · <span class="ch-chip ch-' + b.channel + '" style="display:inline-flex;width:14px;height:14px;font-size:0.5rem;vertical-align:middle;">' + CHANNEL_ICONS[b.channel] + '</span> ' + b.channel + '</div></div>' +
+                    '</div>' +
+                    '<div class="q-row"><span class="q-label">Identité vérifiée</span><span class="q-value text-success">✓ Oui</span></div>' +
+                    '<div class="q-row"><span class="q-label">Note plateforme</span><span class="q-value">⭐ 4.9/5</span></div>' +
+                    '<div class="q-row"><span class="q-label">Statut check-in</span><span class="q-value">' + esc(b.checkinStatus) + '</span></div>' +
+                '</div>' +
+            '</div>' +
+
+            // Quadrant 2 : Communication
+            '<div class="quadrant">' +
+                '<div class="quadrant-header"><div class="q-icon">💬</div><div class="q-title">Communication</div></div>' +
+                '<div class="quadrant-body">' +
+                    (b.messagePreview ?
+                        '<div class="q-message-preview">' + esc(b.messagePreview) + '</div>' :
+                        '<div style="font-size:0.78rem;color:var(--ink-faint);font-style:italic;">Aucun message récent</div>'
+                    ) +
+                    (b.messageUnread > 0 ? '<div style="margin-top:0.4rem;"><span class="badge error" style="font-size:0.6rem;">' + b.messageUnread + ' non lu' + (b.messageUnread>1?'s':'') + '</span></div>' : '') +
+                    '<div style="display:flex;gap:0.3rem;margin-top:0.6rem;flex-wrap:wrap;">' +
+                        '<button class="btn btn-metal btn-xs" onclick="showToast(\'Message envoyé (démo)\',\'success\')">Répondre</button>' +
+                        '<button class="btn btn-ghost btn-xs" onclick="showToast(\'Guide envoyé\',\'success\')">Guide</button>' +
+                        '<button class="btn btn-ghost btn-xs" onclick="showToast(\'Code envoyé par SMS\',\'success\')">Code</button>' +
+                    '</div>' +
+                '</div>' +
+            '</div>' +
+
+            // Quadrant 3 : Arrivée / Départ
+            '<div class="quadrant">' +
+                '<div class="quadrant-header"><div class="q-icon">🔑</div><div class="q-title">Arrivée / Départ</div></div>' +
+                '<div class="quadrant-body">' +
+                    '<div class="q-row"><span class="q-label">Check-in</span><span class="q-value">' + fmtDate(b.start) + ' · 15h</span></div>' +
+                    '<div class="q-row"><span class="q-label">Check-out</span><span class="q-value">' + fmtDate(b.end) + ' · 11h</span></div>' +
+                    '<div class="q-row"><span class="q-label">Type accès</span><span class="q-value">🔐 ' + p.lock.type + '</span></div>' +
+                    '<div class="q-row"><span class="q-label">Code serrure</span>' +
+                        '<span class="q-value">' +
+                            '<span class="q-code ' + (codeMasked ? 'masked' : '') + '" id="lock-code">' + (codeMasked ? '••••' : b.lockCode) + '</span> ' +
+                            '<button class="btn btn-ghost btn-xs" onclick="revealLock(\'' + b.id + '\')">' + (codeMasked ? 'Révéler' : 'Masquer') + '</button>' +
+                        '</span>' +
+                    '</div>' +
+                    '<button class="btn btn-metal btn-xs" style="width:100%;margin-top:0.5rem;" onclick="showToast(\'Nouveau code généré : 8' + Math.floor(Math.random()*1000) + '\',\'success\')">🔄 Changer le code</button>' +
+                '</div>' +
+            '</div>' +
+
+            // Quadrant 4 : Ménage
+            '<div class="quadrant' + (b.housekeepingStatus === 'Assigné' && hkPct < 50 ? ' alert' : '') + '">' +
+                '<div class="quadrant-header"><div class="q-icon">🧹</div><div class="q-title">Ménage</div></div>' +
+                '<div class="quadrant-body">' +
+                    '<div class="q-row"><span class="q-label">Agent</span><span class="q-value">Fatima B.</span></div>' +
+                    '<div class="q-row"><span class="q-label">Statut</span><span class="q-value">' + esc(b.housekeepingStatus) + '</span></div>' +
+                    '<div class="q-row"><span class="q-label">Progression</span><span class="q-value">' + b.housekeepingProgress + ' tâches</span></div>' +
+                    '<div class="q-progress"><div class="q-progress-bar" style="width:' + hkPct + '%"></div></div>' +
+                    '<div style="font-size:0.65rem;color:var(--ink-faint);margin-top:0.3rem;">' + hkPct + '% complété</div>' +
+                    '<button class="btn btn-ghost btn-xs" style="width:100%;margin-top:0.5rem;" onclick="openChecklist()">Voir check-list</button>' +
+                '</div>' +
+            '</div>' +
+
+        '</div>' +
+
+        // Détails financiers
+        '<div class="panel" style="margin-top:1rem;margin-bottom:0;">' +
+            '<div class="panel-title"><span>Détails financiers</span></div>' +
+            '<div class="q-row"><span class="q-label">Montant brut</span><span class="q-value">' + fmtEuro(b.gross) + '</span></div>' +
+            '<div class="q-row"><span class="q-label">Commission LGC (18%)</span><span class="q-value text-error">−' + fmtEuro(Math.round(b.gross - b.revenue)) + '</span></div>' +
+            '<div class="q-row"><span class="q-label">Caution autorisée</span><span class="q-value">' + fmtEuro(300) + '</span></div>' +
+            '<div class="q-row" style="border-top:2px solid var(--metal-lo);padding-top:0.6rem;margin-top:0.4rem;"><span class="q-label" style="font-weight:700;color:var(--metal-hi);">Net propriétaire</span><span class="q-value text-success" style="font-weight:800;font-size:1rem;">' + fmtEuro(b.revenue) + '</span></div>' +
+        '</div>' +
+
+        '<div style="display:flex;gap:0.5rem;margin-top:1rem;flex-wrap:wrap;">' +
+            '<button class="btn btn-ghost btn-sm" onclick="showToast(\'Message envoyé\',\'success\');closeModal();">💬 Contacter</button>' +
+            '<button class="btn btn-ghost btn-sm" onclick="showToast(\'Modifié (démo)\',\'info\');closeModal();">✎ Modifier</button>' +
+            '<button class="btn btn-danger btn-sm" onclick="if(confirm(\'Annuler cette réservation ?\')){showToast(\'Annulation (démo)\',\'warn\');closeModal();}">Annuler</button>' +
+        '</div>';
+
+    document.getElementById('modal-overlay').classList.add('visible');
+}
+
+function revealLock(id) {
+    const b = STATE.data.bookings.find(x => x.id === id);
+    if (!b) return;
+    b.lockRevealed = !b.lockRevealed;
+    const el = document.getElementById('lock-code');
+    if (el) {
+        el.textContent = b.lockRevealed ? b.lockCode : '••••';
+        el.classList.toggle('masked', !b.lockRevealed);
+    }
+    if (b.lockRevealed) showToast('Code révélé — accès loggué (audit)', 'info');
+}
+
+function openChecklist() {
+    const checklist = STATE.data.housekeepingChecklist;
+    const html = checklist.map((section, si) =>
+        '<div class="checklist-section">' +
+            '<h4>' + section.room + '</h4>' +
+            section.items.map((item, ii) =>
+                '<div class="checklist-item">' +
+                    '<input type="checkbox" id="chk-' + si + '-' + ii + '" ' + (item.done ? 'checked' : '') + ' onchange="toggleChecklist(' + si + ',' + ii + ',this.checked)">' +
+                    '<label for="chk-' + si + '-' + ii + '">' + esc(item.name) + '</label>' +
+                    '<span class="ci-photo" onclick="showToast(\'Photo ajoutée (démo)\',\'success\')">📸</span>' +
+                '</div>'
+            ).join('') +
+        '</div>'
+    ).join('');
+
+    document.getElementById('modal-content').innerHTML =
+        '<div class="modal-header">' +
+            '<h3>Check-list ménage</h3>' +
+            '<button class="close-btn" onclick="closeModal()">✕</button>' +
+        '</div>' +
+        '<p style="font-size:0.78rem;color:var(--ink-dim);margin-bottom:0.8rem;">Cochez chaque tâche. Photo obligatoire par pièce. Géolocalisation horodatée.</p>' +
+        html +
+        '<div style="display:flex;gap:0.5rem;margin-top:1rem;">' +
+            '<button class="btn btn-metal" style="flex:1;" onclick="showToast(\'Ménage validé ✓\',\'success\');closeModal();">✓ Valider le ménage</button>' +
+            '<button class="btn btn-danger btn-sm" onclick="showToast(\'Problème signalé — ticket créé\',\'error\')">⚠ Signaler</button>' +
+        '</div>';
+    document.getElementById('modal-overlay').classList.add('visible');
+}
+
+function toggleChecklist(si, ii, checked) {
+    STATE.data.housekeepingChecklist[si].items[ii].done = checked;
+}
+
+function closeModal(e) {
+    if (e && e.target && e.target.id !== 'modal-overlay' && !e.target.classList.contains('close-btn')) return;
+    document.getElementById('modal-overlay').classList.remove('visible');
+}
+
+// ══════════════════════════════════════════════════════════════════
+// PROPERTIES
+// ══════════════════════════════════════════════════════════════════
+function renderProperties() {
+    document.getElementById('properties-grid').innerHTML = STATE.data.properties.map(p =>
+        '<div class="property-card" onclick="openProperty(\'' + p.id + '\')">' +
+            '<div class="pc-img">🏢' +
+                '<div class="pc-channels">' +
+                    p.channels.map(c => '<div class="ch-chip ch-' + c + '">' + CHANNEL_ICONS[c] + '</div>').join('') +
+                '</div>' +
+            '</div>' +
+            '<div class="pc-body">' +
+                '<div class="pc-name">' + esc(p.name) + '</div>' +
+                '<div class="pc-city">📍 ' + esc(p.city) + ' · ' + esc(p.type) + ' · ' + p.guests + ' pers.</div>' +
+                '<div class="pc-stats">' +
+                    '<div><strong>' + fmtEuro(p.basePrice) + '</strong>nuit</div>' +
+                    '<div><strong>' + p.occupancy + '%</strong>occup.</div>' +
+                    '<div><strong>' + fmtEuro(p.revenue) + '</strong>mois</div>' +
+                '</div>' +
+            '</div>' +
+        '</div>'
+    ).join('');
+}
+function openProperty(id) {
+    const p = STATE.data.properties.find(x => x.id === id);
+    if (!p) return;
+    document.getElementById('modal-content').innerHTML =
+        '<div class="modal-header"><h3>' + esc(p.name) + '</h3><button class="close-btn" onclick="closeModal()">✕</button></div>' +
+        '<div class="modal-field"><div class="mf-label">Ville</div><div class="mf-value">' + esc(p.city) + '</div></div>' +
+        '<div class="modal-field"><div class="mf-label">Type · Capacité</div><div class="mf-value">' + esc(p.type) + ' · ' + p.guests + ' personnes · ' + p.bedrooms + ' chambre(s)</div></div>' +
+        '<div class="modal-field"><div class="mf-label">Propriétaire</div><div class="mf-value">' + esc(p.owner) + '</div></div>' +
+        '<div class="modal-field"><div class="mf-label">Canaux connectés</div><div class="mf-value">' +
+            p.channels.map(c => '<span class="ch-chip ch-' + c + '" style="display:inline-flex;width:22px;height:22px;font-size:0.68rem;margin-right:0.3rem;vertical-align:middle;">' + CHANNEL_ICONS[c] + '</span>' + c).join(' · ') +
+        '</div></div>' +
+        '<div class="modal-field"><div class="mf-label">Tarif de base</div><div class="mf-value">' + fmtEuro(p.basePrice) + ' / nuit</div></div>' +
+        '<div class="modal-field"><div class="mf-label">Serrure IoT</div><div class="mf-value">🔐 ' + p.lock.type + ' · <span class="text-success">Connectée</span> · 🔋 ' + p.lock.battery + '%</div></div>' +
+        '<div style="display:flex;gap:0.5rem;margin-top:1rem;flex-wrap:wrap;">' +
+            '<button class="btn btn-ghost btn-sm" onclick="showToast(\'Photos — démo\',\'info\');closeModal();">📸 Photos</button>' +
+            '<button class="btn btn-ghost btn-sm" onclick="showToast(\'Édition — démo\',\'info\');closeModal();">✎ Modifier</button>' +
+            '<button class="btn btn-ghost btn-sm" onclick="showToast(\'Descriptions IA générées\',\'success\');closeModal();">🤖 Descriptions IA</button>' +
+            '<button class="btn btn-danger btn-sm" onclick="showToast(\'Suppression — démo\',\'warn\');closeModal();">Supprimer</button>' +
+        '</div>';
+    document.getElementById('modal-overlay').classList.add('visible');
+}
+function openAddProperty() {
+    document.getElementById('modal-content').innerHTML =
+        '<div class="modal-header"><h3>Ajouter un logement</h3><button class="close-btn" onclick="closeModal()">✕</button></div>' +
+        '<div class="form-grid">' +
+            '<div class="full"><label class="field-label">Nom</label><input placeholder="Ex : T2 République"></div>' +
+            '<div><label class="field-label">Ville</label><input value="Montreuil"></div>' +
+            '<div><label class="field-label">Type</label><select><option>T2</option><option>Studio</option><option>T3</option></select></div>' +
+            '<div><label class="field-label">Capacité</label><input type="number" value="4"></div>' +
+            '<div><label class="field-label">Tarif / nuit (€)</label><input type="number" value="95"></div>' +
+            '<div class="full"><label class="field-label">Canaux à connecter</label>' +
+                '<div style="display:flex;gap:0.4rem;flex-wrap:wrap;margin-top:0.4rem;">' +
+                    ['airbnb','booking','expedia','vrbo'].map(c => '<label style="display:flex;align-items:center;gap:0.4rem;padding:0.4rem 0.7rem;background:var(--panel-2);border-radius:8px;cursor:pointer;font-size:0.75rem;"><input type="checkbox" style="width:auto;"> <span class="ch-chip ch-' + c + '" style="width:16px;height:16px;font-size:0.55rem;">' + CHANNEL_ICONS[c] + '</span> ' + c + '</label>').join('') +
+                '</div>' +
+            '</div>' +
+        '</div>' +
+        '<button class="btn btn-metal" style="width:100%;margin-top:1rem;" onclick="showToast(\'Logement créé ✓\',\'success\');closeModal();">Créer le logement</button>';
+    document.getElementById('modal-overlay').classList.add('visible');
+}
+
+// ══════════════════════════════════════════════════════════════════
+// CALENDAR
+// ══════════════════════════════════════════════════════════════════
+function initCalendarFilter() {
+    const sel = document.getElementById('cal-property-filter');
+    sel.innerHTML = '<option value="all">Tous les logements</option>' +
+        STATE.data.properties.map(p => '<option value="' + p.id + '">' + esc(p.name) + '</option>').join('');
+}
+function renderCalendar() {
+    const year = STATE.currentMonth.getFullYear();
+    const month = STATE.currentMonth.getMonth();
+    document.getElementById('cal-month').textContent = MONTHS_FR[month] + ' ' + year;
+    const filter = document.getElementById('cal-property-filter').value;
+    const firstDay = new Date(year, month, 1);
+    const startWeekday = (firstDay.getDay() + 6) % 7;
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const today = new Date();
+
+    let html = '';
+    ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'].forEach(d => {
+        html += '<div class="cal-day-header">' + d + '</div>';
+    });
+    for (let i = 0; i < startWeekday; i++) html += '<div class="cal-day empty"></div>';
+    for (let d = 1; d <= daysInMonth; d++) {
+        const date = new Date(year, month, d);
+        const booked = STATE.data.bookings.some(b => {
+            if (filter !== 'all' && b.propertyId !== filter) return false;
+            return b.status !== 'cancelled' && date >= b.start && date < b.end;
+        });
+        let cls = 'cal-day';
+        if (date.toDateString() === today.toDateString()) cls += ' today';
+        cls += booked ? ' booked' : ' available';
+        html += '<div class="' + cls + '"><div class="day-num">' + d + '</div></div>';
+    }
+    document.getElementById('calendar-grid').innerHTML = html;
+
+    document.getElementById('sync-status').innerHTML = ['airbnb','booking','expedia','vrbo'].map(c =>
+        '<div style="display:flex;justify-content:space-between;align-items:center;padding:0.65rem 0;border-bottom:1px solid var(--border);">' +
+            '<div style="display:flex;align-items:center;gap:0.6rem;">' +
+                '<div class="ch-chip ch-' + c + '">' + CHANNEL_ICONS[c] + '</div>' +
+                '<span style="font-size:0.82rem;font-weight:600;text-transform:capitalize;">' + c + '</span>' +
+            '</div>' +
+            '<div style="text-align:right;">' +
+                '<div class="badge success" style="font-size:0.6rem;">Synchronisé</div>' +
+                '<div style="font-size:0.65rem;color:var(--ink-faint);margin-top:0.15rem;">il y a 2 min</div>' +
+            '</div>' +
+        '</div>'
+    ).join('');
+}
+function changeMonth(delta) {
+    STATE.currentMonth.setMonth(STATE.currentMonth.getMonth() + delta);
+    renderCalendar();
+}
+
+// ══════════════════════════════════════════════════════════════════
+// BOOKINGS
+// ══════════════════════════════════════════════════════════════════
+function filterBookings(filter, el) {
+    STATE.bookingsFilter = filter;
+    document.querySelectorAll('#view-bookings .section-tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    renderBookings();
+}
+function renderBookings() {
+    let list = STATE.data.bookings;
+    if (STATE.bookingsFilter !== 'all') list = list.filter(b => b.status === STATE.bookingsFilter);
+    list = [...list].sort((a,b) => b.start - a.start);
+    document.getElementById('bookings-list').innerHTML = list.length
+        ? list.map(b => bookingRow(b)).join('')
+        : '<div class="empty-state"><div class="es-icon">📋</div>Aucune réservation</div>';
+}
+
+// ══════════════════════════════════════════════════════════════════
+// PRICING
+// ══════════════════════════════════════════════════════════════════
+function switchPricingTab(tab, el) {
+    document.querySelectorAll('#view-pricing .section-tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    document.querySelectorAll('#view-pricing .sub-section').forEach(s => s.classList.remove('active'));
+    document.getElementById('pricing-' + tab).classList.add('active');
+}
+function renderPricing() {
+    document.getElementById('pricing-rules-list').innerHTML = STATE.data.pricingRules.map(r =>
+        '<div class="list-item">' +
+            '<div class="li-content">' +
+                '<div class="li-title">' + esc(r.label) + ' <span class="badge soft" style="font-size:0.58rem;">' + esc(r.type) + '</span></div>' +
+                '<div class="li-sub">' + esc(r.period) + ' · ×' + r.multiplier + '</div>' +
+            '</div>' +
+            '<div class="li-right"><span class="li-status ' + (r.active ? 'confirmed' : 'cancelled') + '">' + (r.active ? 'Active' : 'Inactive') + '</span></div>' +
+        '</div>'
+    ).join('');
+
+    document.getElementById('pricing-promos-list').innerHTML = STATE.data.promos.map(p =>
+        '<div class="list-item">' +
+            '<div class="li-content">' +
+                '<div class="li-title">' + esc(p.label) + '</div>' +
+                '<div class="li-sub">Code : <strong>' + esc(p.code) + '</strong> · −' + p.discount + '% · ' + esc(p.valid) + '</div>' +
+            '</div>' +
+            '<div class="li-right"><span class="li-status ' + (p.auto ? 'confirmed' : 'pending') + '">' + (p.auto ? 'Auto' : 'Manuel') + '</span></div>' +
+        '</div>'
+    ).join('');
+
+    document.getElementById('pricing-ai-list').innerHTML =
+        '<div class="list-item">' +
+            '<div class="li-content">' +
+                '<div class="li-title">💡 Augmenter de 8% le tarif week-end T2 République</div>' +
+                '<div class="li-sub">90 derniers jours · taux d\'occupation week-end > 90%</div>' +
+            '</div>' +
+            '<button class="btn btn-metal btn-sm" onclick="showToast(\'Appliqué ✓\',\'success\')">Appliquer</button>' +
+        '</div>' +
+        '<div class="list-item">' +
+            '<div class="li-content">' +
+                '<div class="li-title">💡 Réduire de 5% le tarif semaine Studio Croix-de-Chavaux</div>' +
+                '<div class="li-sub">Occupation 58% vs 74% pour logements similaires</div>' +
+            '</div>' +
+            '<button class="btn btn-metal btn-sm" onclick="showToast(\'Appliqué ✓\',\'success\')">Appliquer</button>' +
+        '</div>' +
+        '<div class="list-item">' +
+            '<div class="li-content">' +
+                '<div class="li-title">💡 Activer Early Bird −10% J-30 sur Loft Vincennes</div>' +
+                '<div class="li-sub">Gain estimé : +3 réservations / mois</div>' +
+            '</div>' +
+            '<button class="btn btn-metal btn-sm" onclick="showToast(\'Appliqué ✓\',\'success\')">Appliquer</button>' +
+        '</div>';
+}
+
+// ══════════════════════════════════════════════════════════════════
+// MESSAGES
+// ══════════════════════════════════════════════════════════════════
+function renderMessages() {
+    document.getElementById('chat-list').innerHTML = STATE.data.conversations.map(c =>
+        '<div class="chat-item" onclick="showToast(\'Conversation ' + esc(c.guest) + ' — démo\',\'info\')">' +
+            '<div class="ci-avatar">' + c.initials + '</div>' +
+            '<div class="ci-content">' +
+                '<div class="ci-name">' + esc(c.guest) + ' <span class="ch-chip ch-' + c.channel + '" style="display:inline-flex;width:16px;height:16px;font-size:0.55rem;vertical-align:middle;margin-left:0.3rem;">' + CHANNEL_ICONS[c.channel] + '</span></div>' +
+                '<div class="ci-msg">' + esc(c.lastMessage) + '</div>' +
+            '</div>' +
+            '<div class="ci-meta">' +
+                '<div class="ci-time">' + c.time + '</div>' +
+                (c.unread ? '<div class="ci-unread">' + c.unread + '</div>' : '') +
+            '</div>' +
+        '</div>'
+    ).join('');
+}
+
+// ══════════════════════════════════════════════════════════════════
+// TASKS
+// ══════════════════════════════════════════════════════════════════
+function switchTaskTab(tab, el) {
+    STATE.taskFilter = tab;
+    document.querySelectorAll('#view-tasks .section-tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    renderTasks();
+}
+function renderTasks() {
+    let list = STATE.data.tasks;
+    if (STATE.taskFilter !== 'all') list = list.filter(t => t.type === STATE.taskFilter);
+    document.getElementById('tasks-list').innerHTML = list.length
+        ? list.map(t => {
+            const p = propById(t.propertyId);
+            const icon = t.type === 'cleaning' ? '🧹' : t.type === 'maintenance' ? '🔧' : '🔍';
+            const statusCls = t.status === 'done' ? 'done' : t.status === 'planned' ? 'planned' : 'pending';
+            const statusLabel = t.status === 'done' ? 'Terminé' : t.status === 'planned' ? 'Planifié' : t.status;
+            return '<div class="list-item">' +
+                '<div style="font-size:1.4rem;flex-shrink:0;">' + icon + '</div>' +
+                '<div class="li-content">' +
+                    '<div class="li-title">' + esc(t.title) + (t.priority === 'urgent' ? ' <span class="badge error" style="font-size:0.55rem;">URGENT</span>' : '') + '</div>' +
+                    '<div class="li-sub">' + esc(p.name) + ' · ' + esc(t.assigned) + ' · ' + esc(t.scheduled) + '</div>' +
+                '</div>' +
+                '<div class="li-right"><span class="li-status ' + statusCls + '">' + statusLabel + '</span></div>' +
+            '</div>';
+        }).join('')
+        : '<div class="empty-state"><div class="es-icon">🧹</div>Aucune tâche</div>';
+}
+
+// ══════════════════════════════════════════════════════════════════
+// STATS
+// ══════════════════════════════════════════════════════════════════
+function renderStats() {
+    const metrics = [
+        { lbl:'Chiffre d\'affaires (YTD)', val:fmtEuro(50362), trend:{ text:'+22% vs 2025', cls:'up' } },
+        { lbl:'RevPAR', val:'78 €', trend:{ text:'+9% vs sept.', cls:'up' } },
+        { lbl:'ADR', val:'104 €', trend:{ text:'+5% vs sept.', cls:'up' } },
+        { lbl:'Durée moyenne séjour', val:'4.8 nuits', trend:{ text:'stable', cls:'neutral' } }
+    ];
+    document.getElementById('stats-metrics').innerHTML = metrics.map(m =>
+        '<div class="metric-card' + (m.trend.cls === 'up' ? ' highlight' : '') + '">' +
+            '<div class="m-lbl">' + esc(m.lbl) + '</div>' +
+            '<div class="m-val">' + esc(m.val) + '</div>' +
+            '<div class="m-trend ' + m.trend.cls + '">' + esc(m.trend.text) + '</div>' +
+        '</div>'
+    ).join('');
+
+    const perf = [
+        { ch:'airbnb', label:'Airbnb', pct:48, rev:24170 },
+        { ch:'booking', label:'Booking.com', pct:28, rev:14100 },
+        { ch:'vrbo', label:'Vrbo', pct:14, rev:7050 },
+        { ch:'expedia', label:'Expedia', pct:10, rev:5042 }
+    ];
+    document.getElementById('platform-perf').innerHTML = perf.map(p =>
+        '<div style="margin-bottom:0.9rem;">' +
+            '<div style="display:flex;justify-content:space-between;margin-bottom:0.4rem;">' +
+                '<div style="display:flex;align-items:center;gap:0.6rem;">' +
+                    '<div class="ch-chip ch-' + p.ch + '">' + CHANNEL_ICONS[p.ch] + '</div>' +
+                    '<span style="font-size:0.82rem;font-weight:600;">' + p.label + '</span>' +
+                '</div>' +
+                '<div><strong>' + fmtEuro(p.rev) + '</strong> <span style="color:var(--ink-dim);font-size:0.75rem;">(' + p.pct + '%)</span></div>' +
+            '</div>' +
+            '<div style="height:6px;background:var(--border-hi);border-radius:3px;overflow:hidden;">' +
+                '<div style="height:100%;width:' + p.pct + '%;background:linear-gradient(90deg,var(--metal-hi),var(--metal-lo));border-radius:3px;"></div>' +
+            '</div>' +
+        '</div>'
+    ).join('');
+
+    document.getElementById('property-perf').innerHTML = [...STATE.data.properties]
+        .sort((a,b) => b.revenue - a.revenue)
+        .map(p =>
+            '<div class="list-item">' +
+                '<div class="li-content">' +
+                    '<div class="li-title">' + esc(p.name) + '</div>' +
+                    '<div class="li-sub">' + esc(p.city) + ' · ' + p.occupancy + '% occupation · ' + p.channels.length + ' canaux</div>' +
+                '</div>' +
+                '<div class="li-right"><div class="li-amount">' + fmtEuro(p.revenue) + '</div></div>' +
+            '</div>'
+        ).join('');
+}
+
+// ══════════════════════════════════════════════════════════════════
+// AI
+// ══════════════════════════════════════════════════════════════════
+const AI_RESPONSES = {
+    description: '📝 <strong>Description générée pour T2 République :</strong><br><br>« Au cœur de Montreuil, ce T2 lumineux de 45 m² vous accueille pour un séjour parisien authentique. À 3 minutes du métro Croix-de-Chavaux, il combine le charme d\'un quartier vivant et le calme d\'une rue résidentielle. Cuisine équipée, chambre cosy, Wi-Fi fibre. Idéal pour couples, voyageurs d\'affaires ou petits séjours en famille. »<br><br><em>Longueur optimale Airbnb + Booking · ton premium et chaleureux.</em>',
+    pricing: '💶 <strong>Optimisation tarifaire (90 derniers jours) :</strong><br><br>• <strong>Week-end</strong> : 114 € → 123 € (+8%) — occupation week-end 93%, sous le marché de 6%.<br>• <strong>Semaine basse saison</strong> : 95 € → 90 € (−5%) pour combler 4 nuits vides/mois en moyenne.<br>• <strong>Salon du Livre Montreuil</strong> (28/11–03/12) : ×1.5.<br><br><em>Gain estimé : +180 €/mois.</em>',
+    reply: '💬 <strong>Réponse suggérée à Émilie R. :</strong><br><br>« Bonjour Émilie, merci pour votre message ! Le check-in est possible à partir de 15h. Le boîtier connecté vous permettra d\'accéder au logement à votre arrivée — je vous enverrai le code la veille. N\'hésitez pas si vous avez d\'autres questions. À très bientôt ! »<br><br><em>Score de confiance : 92% → envoi automatique possible.</em>',
+    occupancy: '📈 <strong>Suggestions pour augmenter votre taux d\'occupation :</strong><br><br>1. <strong>Activer la réservation instantanée</strong> — +18% de conversion en moyenne.<br>2. <strong>Réduire le minimum de nuits</strong> à 2 en semaine basse saison.<br>3. <strong>Ajouter des photos coucher de soleil</strong> — les annonces golden hour convertissent 12% de mieux.<br>4. <strong>Activer Early Bird</strong> −10% J-30.<br><br><em>Gain potentiel : +9 points d\'occupation en 60 jours.</em>',
+    forecast: '🔮 <strong>Prévision Novembre 2026 :</strong><br><br>• Revenus estimés : <strong>9 240 €</strong> (±3%)<br>• Taux occupation : 71%<br>• Nuits vendues : 22 / 30<br>• ADR prévisionnel : 108 €<br><br><em>Modèle basé sur 24 mois d\'historique, événements locaux et tendances Montreuil/Vincennes.</em>',
+    audit: '🔍 <strong>Audit qualité annonce T2 République :</strong><br><br>✓ Photos : 9/10 (12 photos, bonne lumière)<br>⚠ Titre : 6/10 — trop court, ajouter un bénéfice émotionnel<br>✓ Description : 8/10<br>⚠ Équipements : 7/10 — manque « espace de travail » (+40% demande 2026)<br>✓ Tarification : 9/10<br>✓ Avis : 9.5/10<br><br><em>Score global : 8.1/10 — au-dessus de 82% des concurrents locaux.</em>'
+};
+function runAI(action) {
+    const out = document.getElementById('ai-output');
+    out.innerHTML = '<div class="panel" style="border-color:var(--metal-lo);">' +
+        '<div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:0.8rem;">' +
+            '<div style="font-size:1.4rem;">🤖</div>' +
+            '<div style="font-size:0.75rem;color:var(--metal);font-weight:700;text-transform:uppercase;letter-spacing:0.1em;">LGC IA · génération en cours…</div>' +
+        '</div>' +
+        '<div style="color:var(--ink-faint);font-size:0.85rem;">Analyse des données (réservations, logements, avis, saisonnalité)…</div>' +
+    '</div>';
+    setTimeout(() => {
+        out.innerHTML = '<div class="panel" style="border-color:var(--metal-lo);">' +
+            '<div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:0.8rem;">' +
+                '<div style="font-size:1.4rem;">🤖</div>' +
+                '<div style="font-size:0.75rem;color:var(--metal);font-weight:700;text-transform:uppercase;letter-spacing:0.1em;">LGC IA · résultat</div>' +
+            '</div>' +
+            '<div style="font-size:0.88rem;line-height:1.65;">' + (AI_RESPONSES[action] || '—') + '</div>' +
+            '<div style="display:flex;gap:0.5rem;margin-top:1rem;flex-wrap:wrap;">' +
+                '<button class="btn btn-metal btn-sm" onclick="showToast(\'Copié ✓\',\'success\')">📋 Copier</button>' +
+                '<button class="btn btn-ghost btn-sm" onclick="showToast(\'Appliqué ✓\',\'success\')">✓ Appliquer</button>' +
+            '</div>' +
+        '</div>';
+    }, 900);
+}
+
+// ══════════════════════════════════════════════════════════════════
+// PROFILE
+// ══════════════════════════════════════════════════════════════════
+function renderProfile() {
+    document.getElementById('profile-role').textContent = ROLE_LABELS[STATE.role];
+}
+
+// ══════════════════════════════════════════════════════════════════
+// SIMULATEUR
+// ══════════════════════════════════════════════════════════════════
+function updateSimulator() {
+    const basePrice = parseFloat(document.getElementById('sim-commune').selectedOptions[0].dataset.base) || 85;
+    const coef = parseFloat(document.getElementById('sim-type').selectedOptions[0].dataset.coef) || 1;
+    const nights = parseInt(document.getElementById('sim-nights').value, 10);
+    document.getElementById('sim-nights-val').textContent = nights;
+    const brut = basePrice * coef * nights;
+    const net = brut * 0.82;
+    document.getElementById('sim-brut').textContent = fmtEuro(brut);
+    document.getElementById('sim-net').textContent = fmtEuro(net);
+    document.getElementById('sim-annuel').textContent = fmtEuro(net * 12);
+}
+['sim-commune','sim-type'].forEach(id => document.getElementById(id).addEventListener('change', updateSimulator));
+document.getElementById('sim-nights').addEventListener('input', updateSimulator);
+
+// ══════════════════════════════════════════════════════════════════
+// PWA
+// ══════════════════════════════════════════════════════════════════
+const PWA_ICON_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><defs><linearGradient id="m" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#e8e4dd"/><stop offset="50%" stop-color="#c9c4bc"/><stop offset="100%" stop-color="#8a857e"/></linearGradient></defs><rect width="512" height="512" fill="#131313" rx="80"/><path d="M 128 400 L 128 200 A 140 140 0 0 1 384 200 L 384 400" fill="none" stroke="url(#m)" stroke-width="16" stroke-linecap="round"/><path d="M 176 400 L 176 216 A 92 92 0 0 1 336 216 L 336 400" fill="none" stroke="url(#m)" stroke-width="16" stroke-linecap="round"/><circle cx="256" cy="260" r="40" fill="none" stroke="url(#m)" stroke-width="16"/><path d="M 228 296 L 220 400 M 284 296 L 292 400" fill="none" stroke="url(#m)" stroke-width="16" stroke-linecap="round"/></svg>';
+const PWA_ICON_DATA = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(PWA_ICON_SVG)));
+
+const PWA_MANIFEST = {
+    name: 'LGC Suite — Conciergerie & Channel Manager',
+    short_name: 'LGC Suite',
+    description: 'Plateforme de conciergerie clé-en-main et channel manager multi-plateformes.',
+    start_url: './',
+    display: 'standalone',
+    orientation: 'portrait',
+    background_color: '#131313',
+    theme_color: '#c9c4bc',
+    scope: './',
+    icons: [
+        { src: PWA_ICON_DATA, sizes: '512x512', type: 'image/svg+xml', purpose: 'any maskable' },
+        { src: PWA_ICON_DATA, sizes: '192x192', type: 'image/svg+xml', purpose: 'any maskable' }
+    ]
+};
+
+(function injectPWA() {
+    const manifestBlob = new Blob([JSON.stringify(PWA_MANIFEST)], { type: 'application/manifest+json' });
+    const manifestUrl = URL.createObjectURL(manifestBlob);
+    const link = document.createElement('link');
+    link.rel = 'manifest';
+    link.href = manifestUrl;
+    document.head.appendChild(link);
+
+    const appleLink = document.createElement('link');
+    appleLink.rel = 'apple-touch-icon';
+    appleLink.href = PWA_ICON_DATA;
+    document.head.appendChild(appleLink);
+
+    if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+        const swCode = `
+            const CACHE = 'lgc-suite-v2';
+            self.addEventListener('install', e => { self.skipWaiting(); });
+            self.addEventListener('activate', e => { e.waitUntil(self.clients.claim()); });
+            self.addEventListener('fetch', e => {
+                if (e.request.method !== 'GET') return;
+                e.respondWith(
+                    caches.match(e.request).then(cached => cached || fetch(e.request).then(res => {
+                        const copy = res.clone();
+                        caches.open(CACHE).then(c => c.put(e.request, copy));
+                        return res;
+                    }).catch(() => cached))
+                );
+            });
+        `;
+        const swBlob = new Blob([swCode], { type: 'text/javascript' });
+        const swUrl = URL.createObjectURL(swBlob);
+        navigator.serviceWorker.register(swUrl).then(() => console.log('[PWA] SW enregistré')).catch(err => console.warn('[PWA]', err.message));
+    }
+})();
+
+window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault();
+    STATE.pwaDeferred = e;
+    if (!sessionStorage.getItem('lgc_pwa_dismissed')) {
+        document.getElementById('pwa-banner').classList.add('visible');
+    }
+});
+function installPWA() {
+    if (STATE.pwaDeferred) {
+        STATE.pwaDeferred.prompt();
+        STATE.pwaDeferred.userChoice.then(choice => {
+            console.log('[PWA]', choice.outcome);
+            STATE.pwaDeferred = null;
+            dismissPWA();
+        });
+    } else {
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+        if (isIOS) {
+            alert('Sur iPhone/iPad :\n\n1. Touchez le bouton Partager (📤)\n2. Choisissez « Sur l\'écran d\'accueil »\n3. Validez avec « Ajouter »');
+        } else {
+            alert('Utilisez le menu de votre navigateur → « Installer l\'application » ou « Ajouter à l\'écran d\'accueil ».');
+        }
+        dismissPWA();
+    }
+}
+function dismissPWA() {
+    document.getElementById('pwa-banner').classList.remove('visible');
+    sessionStorage.setItem('lgc_pwa_dismissed', '1');
+}
+
+// ══════════════════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════════════════
+(function init() {
+    initCalendarFilter();
+    updateSimulator();
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+    console.log('[LGC Suite v2.0] Prêt. Fichier unique, aucun serveur requis.');
+})();
+</script>
+</body>
+</html>
